@@ -1,11 +1,7 @@
-import ASTNodes.ASTNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.antlr.runtime.tree.CommonTree;
-import org.antlr.v4.runtime.Token;
-import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -23,7 +19,6 @@ public class GrammarTest {
 
         ParseTree tree = parser.main();
         System.out.println(tree.toStringTree());
-
 
         Visitor visitor = new Visitor();
 
