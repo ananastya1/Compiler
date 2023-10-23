@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
-public class GrammarTest {
+public class SemanticsTest {
     public static void main(String[] args) throws Exception{
 
         String content = readFile("src/sample.script");
@@ -16,8 +16,15 @@ public class GrammarTest {
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         ILangParser parser = new ILangParser(tokens);
 
+
         ParseTree tree = parser.main();
         System.out.println(tree.toStringTree());
+
+        Visitor visitor = new Visitor();
+
+        ASTNode node = visitor.visit(tree);
+        System.out.println("AST created");
+
     }
 
     private static String readFile(String path) throws IOException {

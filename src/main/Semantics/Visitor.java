@@ -1,11 +1,12 @@
-import ASTNodes.*;
-
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class Visitor extends ILangBaseVisitor<ASTNode> {
+
+    List<String> routinesNames = new ArrayList<>();
 
     private void throwException(String exception) {
         try {
@@ -266,6 +267,12 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
         if (ctx.builtInRoutines() != null) {
             return visit(ctx.builtInRoutines());
         }
+
+        if (!routinesNames.contains(ctx.Identifier().getText())){
+            // ERROR функция не существует
+            return null;
+        }
+
         IdentifierNode functionName = new IdentifierNode(ctx.Identifier().getText(), ctx.getStart().getLine());
         List<ExpressionNode> arguments = new ArrayList<>();
 
@@ -369,6 +376,10 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
      */
     @Override
     public ASTNode visitRoutineDeclaration(ILangParser.RoutineDeclarationContext ctx) {
+        if (routinesNames.contains(ctx.Identifier().getText())){
+            // ERROR функция существует
+            return null;
+        }
         IdentifierNode routineName = new IdentifierNode(ctx.Identifier().getText(), ctx.getStart().getLine());
         ParametersNode parameters = null;
         TypeNode returnType = null;
@@ -382,7 +393,7 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
         }
 
         BodyNode routineBody = (BodyNode) visit(ctx.body());
-
+        routinesNames.add(routineName.getIdentifier());
         return new RoutineDeclarationNode(routineName,parameters,returnType,routineBody,ctx.getStart().getLine());
     }
 
@@ -497,7 +508,6 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
     @Override
     public ASTNode visitReturnStatement(ILangParser.ReturnStatementContext ctx) {
         ExpressionNode expression = null;
-
         if (ctx.expression() != null){
             expression = (ExpressionNode) visit(ctx.expression());
         }
