@@ -3,7 +3,7 @@ public class ArrayTypeNode extends UserTypeNode implements Node {
     private ExpressionNode arraySize;
 
     public ArrayTypeNode(TypeNode elementType, ExpressionNode arraySize, int lineNumber) {
-        super("ArrayTypeNode", lineNumber);
+        super("ArrayTypeNode", lineNumber, Type.ARRAY);
         this.elementType = elementType;
         this.arraySize = arraySize;
     }

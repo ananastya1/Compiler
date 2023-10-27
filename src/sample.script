@@ -1,17 +1,12 @@
-var arr: array[10] integer
-for i in 1..10 loop
-    arr[i] := input(integer)
-end
-var n: integer is 10;
-for i in 2..n loop
-    var key: integer is arr[i];
-    var j: integer is i - 1;
-    while j >= 1 and arr[j] > key loop
-        arr[j + 1] := arr[j];
-        j := j - 1;
-    end
-    arr[j + 1] := key;
-end
-for i in 1..n loop
-    writes(arr[i]);
-end
+var a : integer is 1.5
+
+//routine factorial(n: integer) : integer is
+//begin
+//    if n <= 1 then
+//        return 1;
+//    else
+//       return n * factorial(n - 1);
+//    end;
+//end
+//var a: integer is input(integer);
+//var result: integer is factorial(a);

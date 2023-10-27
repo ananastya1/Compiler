@@ -1,6 +1,9 @@
 public class TypeNode extends ASTNode {
-    public TypeNode(String label, int lineNumber) {
+    Type type = null;
+
+    public TypeNode(String label, int lineNumber, Type type) {
         super(label, lineNumber);
+        this.type = type;
     }
 
     @Override

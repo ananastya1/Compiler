@@ -1,4 +1,4 @@
-public class IdentifierNode extends TypeNode implements Node {
+public class IdentifierNode extends ASTNode{ //extends TypeNode implements Node {
     private String identifier;
 
     public IdentifierNode(String identifier, int lineNumber) {

@@ -1,7 +1,11 @@
+import java.util.HashMap;
+
 public class RoutineDeclarationNode extends ASTNode {
     private IdentifierNode procedureName;
     private ParametersNode parameters;
     private TypeNode returnType;
+    private String routineType;
+    private HashMap<String, Type> variables;
     private BodyNode body;
 
     public RoutineDeclarationNode(IdentifierNode procedureName, ParametersNode parameters, TypeNode returnType, BodyNode body, int lineNumber) {
@@ -26,6 +30,18 @@ public class RoutineDeclarationNode extends ASTNode {
 
     public BodyNode getBody() {
         return body;
+    }
+
+    public String getRoutineType() {
+        return routineType;
+    }
+
+    public HashMap<String, Type> getVariables() {
+        return variables;
+    }
+
+    public void putVariable(String name ,Type type){
+        this.variables.put(name, type);
     }
 
     @Override

@@ -1,9 +1,9 @@
 public class VariableDeclarationNode extends SimpleDeclarationNode {
     private IdentifierNode variableName;
-    private TypeNode type;
+    private Type type;
     private ExpressionNode initialValue;
 
-    public VariableDeclarationNode(IdentifierNode variableName, TypeNode type, ExpressionNode initialValue, int lineNumber) {
+    public VariableDeclarationNode(IdentifierNode variableName, Type type, ExpressionNode initialValue, int lineNumber) {
         super("VariableDeclaration", lineNumber);
         this.variableName = variableName;
         this.type = type;
@@ -14,7 +14,7 @@ public class VariableDeclarationNode extends SimpleDeclarationNode {
         return variableName;
     }
 
-    public TypeNode getType() {
+    public Type getType() {
         return type;
     }
 
@@ -22,15 +22,4 @@ public class VariableDeclarationNode extends SimpleDeclarationNode {
         return initialValue;
     }
 
-    @Override
-    public void printNode(int depth) {
-        String indent = "  ".repeat(depth);
-        System.out.println(this.label);
-        System.out.print(indent + "|__");
-        variableName.printNode(depth + 1);
-        System.out.print(indent + "|__");
-        type.printNode(depth + 1);
-        System.out.print(indent + "|__");
-        initialValue.printNode(depth + 1);
-    }
 }

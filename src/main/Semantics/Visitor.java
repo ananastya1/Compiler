@@ -8,9 +8,9 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
 
     List<String> routinesNames = new ArrayList<>();
 
-    private void throwException(String exception) {
+    private void throwException(Integer line, String exception) {
         try {
-            throw new Exception(exception);
+            throw new Exception("Line-[" + line + "] " + exception);
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
@@ -50,7 +50,6 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
         } else if (ctx.statement() != null) { // statement
             return visit(ctx.statement());
         }
-        throwException("SYNTAX ERROR: 'simpleDeclaration/routineDeclaration/statement' expected");
         return null;
     }
 
@@ -69,7 +68,6 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
             return visit(ctx.typeDeclaration());
         }
 
-        throwException("SYNTAX ERROR: 'variableDeclaration/typeDeclaration' expected");
         return null;
     }
 
@@ -83,20 +81,41 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
     public ASTNode visitVariableDeclaration(ILangParser.VariableDeclarationContext ctx) {
         IdentifierNode identifier = new IdentifierNode(ctx.Identifier().getText(), ctx.getStart().getLine());
 
-        TypeNode type = null;
+        Type type = null;
         ExpressionNode initialValue = null;
 
-        if (ctx.type() == null && ctx.expression() == null){
-            throwException("SYNTAX ERROR: 'type or/and expression' expected");
-            return null;
-
-        }
-
         if (ctx.type() != null){
-            type = (TypeNode) visit(ctx.type());
+            type = ((TypeNode) visit(ctx.type())).type;
         }
+
         if (ctx.expression() != null){
             initialValue = (ExpressionNode) visit(ctx.expression());
+            if (type != HelperStore.typeAnalysis.analyzeExpression(ctx.expression())){
+                throwException(ctx.getStart().getLine(),identifier.getIdentifier() + " Invalid type of initial value");
+            }else{
+                type = HelperStore.typeAnalysis.analyzeExpression(ctx.expression());
+            }
+
+        }
+
+        if (HelperStore.scope == null){
+            if (HelperStore.globalVariables.get(identifier.getIdentifier()) != null){
+                throwException(ctx.getStart().getLine(), identifier.getIdentifier() + " Already exists");
+            }else{
+                HelperStore.globalVariables.put(identifier.getIdentifier(),type);
+            }
+
+        }else{
+            RoutineDeclarationNode routine = HelperStore.routines.get(HelperStore.scope);
+            if (routine == null){
+                throwException(ctx.getStart().getLine(), HelperStore.scope + " Routine doesn't exist");
+            }else{
+                if (routine.getVariables().get(identifier.getIdentifier()) != null){
+                    throwException(ctx.getStart().getLine(), identifier.getIdentifier() + " Already exists");
+                }else{
+                    routine.putVariable(identifier.getIdentifier(), type);
+                }
+            }
         }
 
         return new VariableDeclarationNode(
@@ -118,8 +137,28 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
     public ASTNode visitTypeDeclaration(ILangParser.TypeDeclarationContext ctx) {
 
         IdentifierNode identifier = new IdentifierNode(ctx.Identifier().getText(), ctx.getStart().getLine());
-        TypeNode typeNode = (TypeNode) visit(ctx.type());
-        return new TypeDeclarationNode(identifier, typeNode, ctx.getStart().getLine());
+        Type type = ((TypeNode) visit(ctx.type())).type;
+
+        if (HelperStore.scope == null){
+            if (HelperStore.globalVariables.get(identifier.getIdentifier()) != null){
+                throwException(ctx.getStart().getLine(), identifier.getIdentifier() + " Already exists");
+            }else{
+                HelperStore.globalVariables.put(identifier.getIdentifier(),type);
+            }
+        }else {
+            RoutineDeclarationNode routine = HelperStore.routines.get(HelperStore.scope);
+            if (routine == null){
+                throwException(ctx.getStart().getLine(), HelperStore.scope + " Routine doesn't exist");
+            }else{
+                if (routine.getVariables().get(identifier.getIdentifier()) != null){
+                    throwException(ctx.getStart().getLine(), identifier.getIdentifier() + " Already exists");
+                }else{
+                    routine.putVariable(identifier.getIdentifier(), type);
+                }
+            }
+        }
+
+        return new TypeDeclarationNode(identifier, type, ctx.getStart().getLine());
     }
 
     /**
@@ -136,9 +175,25 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
         } else if (ctx.userType() != null) {
             return visit(ctx.userType());
         } else if (ctx.Identifier() != null) {
-            return new TypeNode(ctx.Identifier().getText(), ctx.getStart().getLine());
+
+            if (HelperStore.scope != null){
+                RoutineDeclarationNode routine = HelperStore.routines.get(HelperStore.scope);
+                if (routine == null){
+                    throwException(ctx.getStart().getLine(), HelperStore.scope + " Routine doesn't exist");
+                }else{
+                    if (routine.getVariables().get(ctx.Identifier().getText()) != null){
+                        return new TypeNode(ctx.Identifier().getText(), ctx.getStart().getLine(),routine.getVariables().get(ctx.Identifier().getText()) );
+                    }
+                }
+            }
+
+            if (HelperStore.globalVariables.get(ctx.Identifier().getText()) == null){
+                throwException(ctx.getStart().getLine(), ctx.Identifier().getText() + " Doesn't exist");
+            }else{
+                return new TypeNode(ctx.Identifier().getText(), ctx.getStart().getLine(), HelperStore.globalVariables.get(ctx.Identifier().getText()));
+            }
+
         }
-        throwException("SYNTAX ERROR: 'primitiveType/userType/Identifier' expected");
         return null;
     }
 
@@ -151,13 +206,13 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
     @Override
     public ASTNode visitPrimitiveType(ILangParser.PrimitiveTypeContext ctx) {
         if (ctx.INTEGER_KEYWORD() != null) {
-            return new PrimitiveTypeNode(PrimitiveTypes.INTEGER, ctx.getStart().getLine());
+            return new TypeNode("Primitive type", ctx.getStart().getLine(), Type.INT);
         } else if (ctx.REAL_KEYWORD() != null) {
-            return new PrimitiveTypeNode(PrimitiveTypes.REAL, ctx.getStart().getLine());
+            return new TypeNode("Primitive type", ctx.getStart().getLine(), Type.REAL);
         } else if (ctx.BOOLEAN_KEYWORD() != null) {
-            return new PrimitiveTypeNode(PrimitiveTypes.BOOLEAN, ctx.getStart().getLine());
+            return new TypeNode("Primitive type", ctx.getStart().getLine(), Type.BOOLEAN);
         }
-        throwException("SYNTAX ERROR: 'INTEGER/REAL/BOOLEAN' expected");
+
         return null;
     }
 
@@ -176,7 +231,6 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
             return visit(ctx.recordType());
         }
 
-        throwException("SYNTAX ERROR: 'arrayType/recordType/' expected");
         return null;
     }
 
@@ -237,7 +291,6 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
             return  visit(ctx.ifStatement());
         }
 
-        throwException("SYNTAX ERROR: 'assignment/routineCall/whileLoop/forLoop/ifStatement/inputStatement' expected");
         return null;
     }
 
@@ -297,8 +350,6 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
         } else if (ctx.inputStatement() != null) {
             return visit(ctx.inputStatement());
         }
-
-        throwException("SYNTAX ERROR: 'writeStatement/inputStatement' expected");
 
         return null;
     }
@@ -392,9 +443,28 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
             returnType = (TypeNode) visit(ctx.type());
         }
 
+        HelperStore.scope = routineName.getIdentifier();
         BodyNode routineBody = (BodyNode) visit(ctx.body());
+        HelperStore.scope = null;
+
         routinesNames.add(routineName.getIdentifier());
-        return new RoutineDeclarationNode(routineName,parameters,returnType,routineBody,ctx.getStart().getLine());
+        RoutineDeclarationNode routine = new RoutineDeclarationNode(routineName,parameters,returnType,routineBody,ctx.getStart().getLine());
+
+        if (parameters != null){
+            for (int i = 0; i < parameters.getParameterDeclarations().size(); i++) {
+                if (routine.getVariables().get(parameters.getParameterDeclarations().get(i).getParameterName().getIdentifier()) == null){
+                    routine.putVariable(
+                            parameters.getParameterDeclarations().get(i).getParameterName().getIdentifier(),
+                            parameters.getParameterDeclarations().get(i).getType().type);
+                }else {
+                    throwException(ctx.getStart().getLine(), routineName.getIdentifier() + " parameters' name should not be the same");
+                }
+
+            }
+        }
+
+
+        return routine;
     }
 
     /**
@@ -478,8 +548,6 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
                             ctx.getStart().getLine());
 
                     lines.add(line);
-                }else {
-                    throwException("SYNTAX ERROR: assignment/routineCall/whileLoop/forLoop/IfStatement expected");
                 }
 
 
@@ -489,8 +557,6 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
                         (ReturnStatementNode) visit(child),
                         ctx.getStart().getLine());
                 lines.add(line);
-            }else{
-                throwException("SYNTAX ERROR: SimpleDeclarationNode/ReturnStatementNode/StatementNode");
             }
 
         }
@@ -584,7 +650,6 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
         } else if (ctx.NEQ() != null) {
             return ComparisonOperator.NEQ;
         }
-        throwException("SYNTAX ERROR: LT/LEQ/GT/GEQ/EQ/NEQ expected");
         return null;
 
     }
@@ -693,7 +758,6 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
             return visit(ctx.routineCall());
         }
 
-        throwException("SYNTAX ERROR: IntegerLiteral/RealLiteral/BoolLiteral/modifiablePrimary/routineCall exprected");
         return null;
     }
 
@@ -763,7 +827,6 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
             return new WriteStatementNode(WriteType.WRITE, expression, ctx.getStart().getLine());
         }
 
-        throwException("SYNTAX ERROR: WRITE/WRITES/WRITELN expected");
         return null;
     }
 

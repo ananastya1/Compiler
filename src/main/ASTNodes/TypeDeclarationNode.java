@@ -1,8 +1,8 @@
 public class TypeDeclarationNode extends SimpleDeclarationNode {
     private IdentifierNode typeName;
-    private TypeNode type;
+    private Type type;
 
-    public TypeDeclarationNode(IdentifierNode typeName, TypeNode type, int lineNumber) {
+    public TypeDeclarationNode(IdentifierNode typeName, Type type, int lineNumber) {
         super("TypeDeclaration", lineNumber);
         this.typeName = typeName;
         this.type = type;
@@ -12,7 +12,7 @@ public class TypeDeclarationNode extends SimpleDeclarationNode {
         return typeName;
     }
 
-    public TypeNode getType() {
+    public Type getType() {
         return type;
     }
 }
