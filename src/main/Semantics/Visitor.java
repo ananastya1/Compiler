@@ -3,10 +3,9 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 
 public class Visitor extends ILangBaseVisitor<ASTNode> {
-
-    List<String> routinesNames = new ArrayList<>();
 
     private void throwException(Integer line, String exception) {
         try {
@@ -246,7 +245,14 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
         List<VariableDeclarationNode> variables = new ArrayList<>();
 
         for (int i = 0; i <  ctx.variableDeclaration().size() ; i++) {
-            variables.add((VariableDeclarationNode) visit( ctx.variableDeclaration(i)));
+            VariableDeclarationNode variable =  (VariableDeclarationNode) visit( ctx.variableDeclaration(i));
+            for (VariableDeclarationNode variableDeclarationNode : variables) {
+                if (Objects.equals(variableDeclarationNode.getVariableName().getIdentifier(), variable.getVariableName().getIdentifier())) {
+                    throwException(ctx.getStart().getLine(), " variable " + variable.getVariableName().getIdentifier() + " already exists");
+                    return null;
+                }
+            }
+            variables.add(variable);
         }
 
         return new RecordTypeNode(variables, ctx.getStart().getLine());
@@ -263,6 +269,10 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
 
         TypeNode arrayType = (TypeNode) visit(ctx.type());
         ExpressionNode arraySize = (ExpressionNode) visit(ctx.expression());
+        Type type = HelperStore.typeAnalysis.analyzeExpression(ctx.expression());
+        if (!type.equals(Type.INT)){
+            throwException(ctx.getStart().getLine(), "Array size is not of type INT");
+        }
         return new ArrayTypeNode(arrayType, arraySize, ctx.getStart().getLine());
     }
 
@@ -303,6 +313,36 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
     @Override
     public ASTNode visitAssignment(ILangParser.AssignmentContext ctx) {
         ModifiablePrimaryNode leftSide = (ModifiablePrimaryNode) visit(ctx.modifiablePrimary());
+        Type leftSideType = Type.RECORD;
+        if (HelperStore.scope!=null) {
+            if (HelperStore.routines.get(HelperStore.scope) != null) {
+                HashMap<String, Type> vars = HelperStore.routines.get(HelperStore.scope).getVariables();
+                if (vars.get(leftSide.getIdentifier().getIdentifier()) == null && HelperStore.globalVariables.get(leftSide.getIdentifier().getIdentifier()) == null) {
+                    throwException(ctx.getStart().getLine(), "Variable " + leftSide.getIdentifier().getIdentifier() + " does not exist");
+                } else if (vars.get(leftSide.getIdentifier().getIdentifier()) != null){
+                    leftSideType = vars.get(leftSide.getIdentifier().getIdentifier());
+                } else if (HelperStore.globalVariables.get(leftSide.getIdentifier().getIdentifier()) == null){
+                    leftSideType = HelperStore.globalVariables.get(leftSide.getIdentifier().getIdentifier());
+                }
+            } else {
+                throwException(ctx.getStart().getLine(), "Routine " + HelperStore.scope + "does not exist");
+            }
+        }else {
+            if (HelperStore.globalVariables.get(leftSide.getIdentifier().getIdentifier()) == null){
+                throwException(ctx.getStart().getLine(), "Variable " + leftSide.getIdentifier().getIdentifier() + " does not exist");
+            }else{
+                leftSideType = HelperStore.globalVariables.get(leftSide.getIdentifier().getIdentifier());
+            }
+        }
+
+        Type rightSideType = HelperStore.typeAnalysis.analyzeExpression(ctx.expression());
+        // возиожно временная заглушка
+
+        if (leftSideType.equals(Type.INT) || leftSideType.equals(Type.BOOLEAN) || leftSideType.equals(Type.REAL)){
+            if (!rightSideType.equals(leftSideType)){
+                throwException(ctx.getStart().getLine(), "Expression should be of the same type as variable");
+            }
+        }
 
         ExpressionNode rightSide = (ExpressionNode) visit(ctx.expression());
 
@@ -321,19 +361,32 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
             return visit(ctx.builtInRoutines());
         }
 
-        if (!routinesNames.contains(ctx.Identifier().getText())){
-            // ERROR функция не существует
-            return null;
+        if (HelperStore.routines.get(ctx.Identifier().getText()) == null){
+            throwException(ctx.getStart().getLine(), "Routine "+ctx.Identifier().getText()+"does not exist");
+//            return null;
+        }else{
+            IdentifierNode functionName = new IdentifierNode(ctx.Identifier().getText(), ctx.getStart().getLine());
+
+            List<ExpressionNode> arguments = new ArrayList<>();
+            List<ParameterDeclarationNode> routineParameters = HelperStore.routines.get(ctx.Identifier().getText()).getParameters();
+
+            if (ctx.expression().size() != routineParameters.size()){
+                throwException(ctx.getStart().getLine(), "Number of arguments does not correspond to number of routine's parameters");
+            }else{
+                for (int i = 0; i < ctx.expression().size(); i++) {
+                    Type argumentType = HelperStore.typeAnalysis.analyzeExpression(ctx.expression(i));
+                    if (!routineParameters.get(i).getType().type.equals(argumentType)){
+                        throwException(ctx.getStart().getLine(), "Type of argument " + argumentType + " does not correspond to type of routine's parameter");
+                    }
+                    arguments.add((ExpressionNode) visit(ctx.expression(i)));
+                }
+            }
+
+            return new RoutineCallNode(functionName, arguments, ctx.getStart().getLine());
         }
+        return null;
 
-        IdentifierNode functionName = new IdentifierNode(ctx.Identifier().getText(), ctx.getStart().getLine());
-        List<ExpressionNode> arguments = new ArrayList<>();
 
-        for (int i = 0; i < ctx.expression().size(); i++) {
-            arguments.add((ExpressionNode) visit(ctx.expression(i)));
-        }
-
-        return new RoutineCallNode(functionName, arguments, ctx.getStart().getLine());
 
     }
 
@@ -363,6 +416,9 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
     @Override
     public ASTNode visitWhileLoop(ILangParser.WhileLoopContext ctx) {
         ExpressionNode condition = (ExpressionNode) visit(ctx.expression());
+        if (!HelperStore.typeAnalysis.analyzeExpression(ctx.expression()).equals(Type.BOOLEAN)){
+            throwException(ctx.getStart().getLine(), "Type of condition should be boolean");
+        }
         BodyNode loopBody = (BodyNode) visit(ctx.body());
 
         return new WhileLoopNode(condition, loopBody, ctx.getStart().getLine());
@@ -379,6 +435,7 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
         IdentifierNode loopVariable = new IdentifierNode(ctx.Identifier().getText(), ctx.getStart().getLine());
         boolean isReverse = ctx.REVERSE() != null;
 
+        // TODO: сделать скоп для фора с переменной лупа
         RangeNode range = (RangeNode) visit(ctx.range());
         BodyNode loopBody = (BodyNode) visit(ctx.body());
 
@@ -397,6 +454,10 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
         ExpressionNode startValue = (ExpressionNode) visit(ctx.expression(0));
         ExpressionNode endValue = (ExpressionNode) visit(ctx.expression(1));
 
+        if (!(HelperStore.typeAnalysis.analyzeExpression(ctx.expression(0)).equals(Type.INT) && HelperStore.typeAnalysis.analyzeExpression(ctx.expression(1)).equals(Type.INT))){
+            throwException(ctx.getStart().getLine(), "Range should consist of two integer numbers");
+        }
+
         return new RangeNode(startValue, endValue, ctx.getStart().getLine());
     }
 
@@ -409,6 +470,10 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
     @Override
     public ASTNode visitIfStatement(ILangParser.IfStatementContext ctx) {
         ExpressionNode condition = (ExpressionNode) visit(ctx.expression());
+        if (!HelperStore.typeAnalysis.analyzeExpression(ctx.expression()).equals(Type.BOOLEAN)){
+            throwException(ctx.getStart().getLine(), "Type of condition should be boolean");
+        }
+
         BodyNode ifBody = (BodyNode) visit(ctx.body(0));
         BodyNode elseBody = null;
         if (ctx.body(1) != null) {
@@ -427,16 +492,17 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
      */
     @Override
     public ASTNode visitRoutineDeclaration(ILangParser.RoutineDeclarationContext ctx) {
-        if (routinesNames.contains(ctx.Identifier().getText())){
-            // ERROR функция существует
+        if ( HelperStore.routines.get(ctx.Identifier().getText()) != null){
+            throwException(ctx.getStart().getLine(), "Routine "+ctx.Identifier().getText()+" exists");
             return null;
         }
+
         IdentifierNode routineName = new IdentifierNode(ctx.Identifier().getText(), ctx.getStart().getLine());
-        ParametersNode parameters = null;
+        List<ParameterDeclarationNode> parameters = new ArrayList<>();
         TypeNode returnType = null;
 
         if (ctx.parameters() != null) {
-            parameters = (ParametersNode) visit(ctx.parameters());
+            parameters = ((ParametersNode) visit(ctx.parameters())).getParameterDeclarations();
         }
 
         if (ctx.type() != null) {
@@ -447,23 +513,10 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
         BodyNode routineBody = (BodyNode) visit(ctx.body());
         HelperStore.scope = null;
 
-        routinesNames.add(routineName.getIdentifier());
+
         RoutineDeclarationNode routine = new RoutineDeclarationNode(routineName,parameters,returnType,routineBody,ctx.getStart().getLine());
 
-        if (parameters != null){
-            for (int i = 0; i < parameters.getParameterDeclarations().size(); i++) {
-                if (routine.getVariables().get(parameters.getParameterDeclarations().get(i).getParameterName().getIdentifier()) == null){
-                    routine.putVariable(
-                            parameters.getParameterDeclarations().get(i).getParameterName().getIdentifier(),
-                            parameters.getParameterDeclarations().get(i).getType().type);
-                }else {
-                    throwException(ctx.getStart().getLine(), routineName.getIdentifier() + " parameters' name should not be the same");
-                }
-
-            }
-        }
-
-
+        HelperStore.routines.put(routineName.getIdentifier(),routine);
         return routine;
     }
 
@@ -480,6 +533,13 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
 
         for (ILangParser.ParameterDeclarationContext paramCtx : ctx.parameterDeclaration()) {
             ParameterDeclarationNode parameter = (ParameterDeclarationNode) visit(paramCtx);
+
+            for (ParameterDeclarationNode parameterDeclarationNode : parameterList) {
+                if (parameterDeclarationNode.getParameterName().getIdentifier().equals(parameter.getParameterName().getIdentifier())) {
+                    throwException(ctx.getStart().getLine(), "Parameters' names should be different");
+                }
+            }
+
             parameterList.add(parameter);
         }
 

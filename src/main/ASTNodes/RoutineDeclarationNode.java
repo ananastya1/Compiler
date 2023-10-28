@@ -1,14 +1,18 @@
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class RoutineDeclarationNode extends ASTNode {
     private IdentifierNode procedureName;
-    private ParametersNode parameters;
+//    private ParametersNode parameters;
     private TypeNode returnType;
     private String routineType;
     private HashMap<String, Type> variables;
+    private List<ParameterDeclarationNode> parameters = new ArrayList<>();
     private BodyNode body;
 
-    public RoutineDeclarationNode(IdentifierNode procedureName, ParametersNode parameters, TypeNode returnType, BodyNode body, int lineNumber) {
+    public RoutineDeclarationNode(IdentifierNode procedureName, List<ParameterDeclarationNode> parameters, TypeNode returnType, BodyNode body, int lineNumber) {
         super("RoutineDeclaration", lineNumber);
         this.procedureName = procedureName;
         this.parameters = parameters;
@@ -20,7 +24,7 @@ public class RoutineDeclarationNode extends ASTNode {
         return procedureName;
     }
 
-    public ParametersNode getParameters() {
+    public List<ParameterDeclarationNode> getParameters() {
         return parameters;
     }
 

@@ -1,4 +1,6 @@
 var a : integer is 1.5
+var a : integer is 1.5
+var a : integer is 1.5
 
 //routine factorial(n: integer) : integer is
 //begin
