@@ -8,6 +8,7 @@ public class ModifiablePrimaryNode extends PrimaryNode {
         super(lineNumber);
         this.identifier = identifier;
         this.accessorList = accessorList;
+
     }
 
     public IdentifierNode getIdentifier() {

@@ -1,4 +1,6 @@
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class TypeAnalysis {
 
@@ -19,18 +21,8 @@ public class TypeAnalysis {
                 return analyzeSimple(ctx.simple(0));
             }
             return Type.BOOLEAN;
-//                String operator = ctx.getChild(1).getText();
-//                String leftType = analyzeSimple(ctx.simple(0));
-//                String rightType = analyzeSimple(ctx.simple(1));
-//
-//                // Дополните эту часть кода для анализа типов операторов (AND, OR, XOR и сравнения).
-//                // В зависимости от оператора, верните тип результата или генерируйте ошибку, если типы несовместимы.
-//
-//                return "unknown"; // Замените "unknown" на фактический результат анализа типа.
-
         }
         return null;
-
     }
 
     private Type analyzeSimple(ILangParser.SimpleContext ctx) {
@@ -38,7 +30,6 @@ public class TypeAnalysis {
             if (ctx.factor().size() == 1) {
                 return analyzeFactor(ctx.factor(0));
             } else {
-//                String operator = ctx.getChild(1).getText();
                 Type leftType = analyzeFactor(ctx.factor(0));
                 Type rightType = analyzeFactor(ctx.factor(1));
                 return getPrimitiveType(leftType, rightType);
@@ -95,11 +86,17 @@ public class TypeAnalysis {
             // Обработка modifiablePrimary
             // Верните соответствующий тип, если он известен.
         } else if (ctx.routineCall() != null) {
+            String a = ctx.getText();
+            if (HelperStore.inputType != null){
+                Type type = HelperStore.inputType.getType();
+                HelperStore.inputType = null;
+                return type;
+            }
             String routineName = ctx.routineCall().Identifier().getText();
 
             RoutineDeclarationNode routine = HelperStore.routines.get(routineName);
             if (routine != null){
-                return Type.valueOf(routine.getRoutineType());
+                return routine.getReturnType().type.getType();
             }
             return null;
             // Обработка вызовов рутины
@@ -109,87 +106,99 @@ public class TypeAnalysis {
         return null; // Замените "unknown" на фактический результат анализа типа.
     }
 
-    private Type analyzeModifiablePrimary(ILangParser.ModifiablePrimaryContext ctx) {
+    public Type analyzeModifiablePrimary(ILangParser.ModifiablePrimaryContext ctx) {
         if (ctx.Identifier() != null) {
-            String modifiablePrimaryName = ctx.Identifier().toString(); //???????
+            String modifiablePrimaryName = ctx.Identifier(0).getText(); //???????
             if (ctx.getChildCount() > 1) {
-                Type CurrenTtype = HelperStore.globalVariables.get(modifiablePrimaryName);
 
-                String nextType;
+                List<String> identifiers = new ArrayList<>();
 
-                if (ctx.getChild(1).getText().equals(".")){
-                    nextType = "record";
-                }else{
-                    nextType = "array";
-                }
+                for (int i = 0; i < ctx.getChildCount(); i++) {
+                    if (ctx.getChild(i).getText().equals(".") || ctx.getChild(i).getText().equals("]") ||ctx.getChild(i).getText().equals("[") ){
+                        continue;
+                    }
 
-//                a[1].a.c[5]
-//
-//                a, arr record
-//                        d record null
-//                    c arr int
-//
-//                var arr[10] : integer
-//                        a.a   arr[2].a
-
-                for (int i = 2; i < ctx.getChildCount(); i++) {
-
-                    if (nextType.equals("array")){
-//                            if (HelperStore.scope != null){
-//
-//                            }
-//                            Type arrayType = HelperStore.globalVariables.get(Identifier);
-//                            if (arrayType.equals(Type.ARRAY) || arrayType.equals(Type.RECORD)){
-//
-//                            }else{
-//
-//                                return arrayType;
-//                            }
+                    if (ctx.getChild(i) instanceof ILangParser.ExpressionContext){
+                        if (analyzeExpression((ILangParser.ExpressionContext) ctx.getChild(i)) != Type.INT){
+                            HelperStore.throwException(ctx.getStart().getLine(), "Size/Index of ARRAY TYPE must be of INT TYPE");
+                        }
+                        identifiers.add("0");
                     }else{
-                        String Identifier = ctx.getChild(i).getText();
-
+                        identifiers.add(ctx.getChild(i).getText());
                     }
                 }
+                TypeClass variableType = null;
+                if (HelperStore.scope != null){
+                    RoutineDeclarationNode routine = HelperStore.routines.get(HelperStore.scope);
+                    variableType = routine.getVariables().get(identifiers.get(0));
+                }
+
+                if (variableType == null){
+                    variableType = HelperStore.globalVariables.get(identifiers.get(0));
+                }
+
+                if (variableType == null){
+                    HelperStore.throwException(ctx.getStart().getLine(), "Variable " +  identifiers.get(0)+" does not declared");
+                    return null;
+                }
+
+                ArrayType array = null;
+                RecordType record = null;
+                Type finishedType = null;
+                if (variableType.getType() == Type.ARRAY){
+                    array = HelperStore.arrays.get(identifiers.get(0));
+
+                }else if (variableType.getType() == Type.RECORD){
+//                    record = HelperStore.records.get(variableType.getName());
+                    record = HelperStore.records.get(variableType.getName());
+                }
 
 
-//                ILangParser.ModifiablePrimaryContext child = (ILangParser.ModifiablePrimaryContext) ctx.getChild(0)
-//                for (int i = 1; i < ctx.getChildCount(); i++) {
-//                    if (HelperStore.scope != null){
-//                        Routine
-//                    }
-//                    else if (HelperStore.globalVariables.get(ctx.getChild(i).getText()) == Type.ARRAY ||
-//                            HelperStore.globalVariables.get(ctx.getChild(i).getText()) == Type.RECORD) {
-//                        return analyzePrimary((ILangParser.PrimaryContext) ctx.getChild(i).getChild(0));
-//
-//                    } else if (HelperStore.globalVariables.get(ctx.getChild(i).getText()) == Type.ARRAY) {
-////
-////
-////                    if (ctx.getChild(i) instanceof ILangParser.ExpressionContext){
-////                        return analyzeExpression((ILangParser.ExpressionContext) ctx.getChild(i));
-////                    }else{
-////                        ModifiablePrimaryRightPartNode element = new ModifiablePrimaryRightPartNode(new IdentifierNode(ctx.getChild(i).getText(),ctx.getStart().getLine()), ctx.getStart().getLine());
-////                        right.add(element);
-////                    }
-//                    }
+                identifiers.remove(0);
+                if (record != null){
+                    finishedType = record.getVariableType(identifiers);
+                } else if (array != null){
+                    finishedType = array.getVariableType(identifiers);
+                }else{
+                    HelperStore.throwException(ctx.getStart().getLine(), "Unknown type is caught :)");
+                }
+
+
+                if (finishedType == null){
+                    for (int i = 0; i < identifiers.size(); i++) {
+                        if (identifiers.get(i).equals("0")){
+                            HelperStore.throwException(ctx.getStart().getLine(), "Attempt to access an array element from non ARRAY TYPE");
+                        }
+                    }
+                    String str = String.join(", ", identifiers);
+                    HelperStore.throwException(ctx.getStart().getLine(), "Record field(s) '" + str + "' do(es) not exist");
+                }
+
+                return finishedType;
+
+
             } else {
                 if (HelperStore.scope != null) {
                     RoutineDeclarationNode routine = HelperStore.routines.get(HelperStore.scope);
-                    Type type = routine.getVariables().get(modifiablePrimaryName);
+                    Type type = routine.getVariables().get(modifiablePrimaryName).getType();
                     if (type != null) {
                         return type;
                     }
+                    if (HelperStore.isVariableInRoutineParameters(modifiablePrimaryName)){
+                        for (int i = 0; i < routine.getParameters().size(); i++) {
+                            if (Objects.equals(routine.getParameters().get(i).getParameterName().getIdentifier(), modifiablePrimaryName)){
+                                return routine.getParameters().get(i).getType().type.getType();
+                            }
+                        }
+                    }
                 }
-                return HelperStore.globalVariables.get(modifiablePrimaryName);
+                return HelperStore.globalVariables.get(modifiablePrimaryName).getType();
             }
         }
         return null;
     }
-//    private Type analyzeUserType()
 
-
-
-
-    private Type getPrimitiveType(Type leftType, Type rightType) {
+    public Type getPrimitiveType(Type leftType, Type rightType) {
         if (leftType == Type.INT && rightType == Type.INT){
             return Type.INT;
         } else if (leftType == Type.INT && rightType == Type.REAL){

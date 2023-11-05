@@ -1,7 +1,7 @@
 public class TypeNode extends ASTNode {
-    Type type = null;
+    TypeClass type = null;
 
-    public TypeNode(String label, int lineNumber, Type type) {
+    public TypeNode(String label, int lineNumber, TypeClass type) {
         super(label, lineNumber);
         this.type = type;
     }

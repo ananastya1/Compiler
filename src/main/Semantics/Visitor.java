@@ -1,19 +1,9 @@
 import org.antlr.v4.runtime.tree.ParseTree;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 public class Visitor extends ILangBaseVisitor<ASTNode> {
 
-    private void throwException(Integer line, String exception) {
-        try {
-            throw new Exception("Line-[" + line + "] " + exception);
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
-    }
 
     /**
      * Visit a parse tree produced by {@link ILangParser#main}.
@@ -80,41 +70,50 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
     public ASTNode visitVariableDeclaration(ILangParser.VariableDeclarationContext ctx) {
         IdentifierNode identifier = new IdentifierNode(ctx.Identifier().getText(), ctx.getStart().getLine());
 
-        Type type = null;
+        TypeClass type = null;
         ExpressionNode initialValue = null;
 
         if (ctx.type() != null){
-            type = ((TypeNode) visit(ctx.type())).type;
+            type = new TypeClass(((TypeNode) visit(ctx.type())).type.getType());
         }
 
         if (ctx.expression() != null){
             initialValue = (ExpressionNode) visit(ctx.expression());
-            if (type != HelperStore.typeAnalysis.analyzeExpression(ctx.expression())){
-                throwException(ctx.getStart().getLine(),identifier.getIdentifier() + " Invalid type of initial value");
-            }else{
-                type = HelperStore.typeAnalysis.analyzeExpression(ctx.expression());
+            Type analysisType = HelperStore.typeAnalysis.analyzeExpression(ctx.expression());
+            if (type == null){
+                type = new TypeClass(analysisType) ;
+            } else if (type.getType() != analysisType){
+                HelperStore.throwException(ctx.getStart().getLine(),identifier.getIdentifier() + " invalid type of initial value");
             }
-
         }
+        HelperStore.inputType = null;
 
-        if (HelperStore.scope == null){
-            if (HelperStore.globalVariables.get(identifier.getIdentifier()) != null){
-                throwException(ctx.getStart().getLine(), identifier.getIdentifier() + " Already exists");
-            }else{
-                HelperStore.globalVariables.put(identifier.getIdentifier(),type);
+        if (!HelperStore.isRecordScope){
+            if (HelperStore.isLoopVariable(identifier.getIdentifier())){
+                HelperStore.throwException(ctx.getStart().getLine()," Variable should not be the same as the loop variable");
             }
 
-        }else{
-            RoutineDeclarationNode routine = HelperStore.routines.get(HelperStore.scope);
-            if (routine == null){
-                throwException(ctx.getStart().getLine(), HelperStore.scope + " Routine doesn't exist");
-            }else{
-                if (routine.getVariables().get(identifier.getIdentifier()) != null){
-                    throwException(ctx.getStart().getLine(), identifier.getIdentifier() + " Already exists");
+            if (HelperStore.scope != null){
+                if (HelperStore.isVariableInRoutineScope(identifier.getIdentifier()) ||
+                        HelperStore.isVariableInRoutineParameters(identifier.getIdentifier())){
+
+                    HelperStore.throwException(ctx.getStart().getLine(), identifier.getIdentifier() + " already exists");
                 }else{
+                    RoutineDeclarationNode routine = HelperStore.routines.get(HelperStore.scope);
                     routine.putVariable(identifier.getIdentifier(), type);
                 }
+            }else{
+                if (HelperStore.globalVariables.get(identifier.getIdentifier()) != null){
+                    HelperStore.throwException(ctx.getStart().getLine(), identifier.getIdentifier() + " already exists");
+                }else{
+                    HelperStore.globalVariables.put(identifier.getIdentifier(),type);
+                }
             }
+        }
+
+
+        if (ctx.type() != null && type != null && type.getType() == Type.RECORD){
+            type.setName(ctx.type().getText());
         }
 
         return new VariableDeclarationNode(
@@ -136,25 +135,39 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
     public ASTNode visitTypeDeclaration(ILangParser.TypeDeclarationContext ctx) {
 
         IdentifierNode identifier = new IdentifierNode(ctx.Identifier().getText(), ctx.getStart().getLine());
-        Type type = ((TypeNode) visit(ctx.type())).type;
+        ASTNode visitedType =  visit(ctx.type());
+        TypeClass type = new TypeClass(((TypeNode) visitedType).type.getType());
+        if (HelperStore.isLoopVariable(identifier.getIdentifier())){
+            HelperStore.throwException(ctx.getStart().getLine()," Variable should not be the same as the loop variable");
+        }
 
-        if (HelperStore.scope == null){
+        if (HelperStore.scope != null){
+            if (HelperStore.isVariableInRoutineScope(identifier.getIdentifier()) ||
+                    HelperStore.isVariableInRoutineParameters(identifier.getIdentifier())){
+
+                HelperStore.throwException(ctx.getStart().getLine(), identifier.getIdentifier() + " already exists");
+            }else{
+                RoutineDeclarationNode routine = HelperStore.routines.get(HelperStore.scope);
+                routine.putVariable(identifier.getIdentifier(), type);
+            }
+        }else{
             if (HelperStore.globalVariables.get(identifier.getIdentifier()) != null){
-                throwException(ctx.getStart().getLine(), identifier.getIdentifier() + " Already exists");
+                HelperStore.throwException(ctx.getStart().getLine(), identifier.getIdentifier() + " already exists");
             }else{
                 HelperStore.globalVariables.put(identifier.getIdentifier(),type);
             }
-        }else {
-            RoutineDeclarationNode routine = HelperStore.routines.get(HelperStore.scope);
-            if (routine == null){
-                throwException(ctx.getStart().getLine(), HelperStore.scope + " Routine doesn't exist");
-            }else{
-                if (routine.getVariables().get(identifier.getIdentifier()) != null){
-                    throwException(ctx.getStart().getLine(), identifier.getIdentifier() + " Already exists");
-                }else{
-                    routine.putVariable(identifier.getIdentifier(), type);
-                }
-            }
+        }
+
+        if (type.getType() == Type.RECORD){
+            List<VariableDeclarationNode> variables = ( (RecordTypeNode) visitedType ).getVariableDeclarations();
+            RecordType newRecord = new RecordType(identifier.getIdentifier(),variables);
+            System.out.println("Hello world");
+            HelperStore.records.put(identifier.getIdentifier(), newRecord);
+        }else if (type.getType() == Type.ARRAY){
+            TypeClass arrayType = new TypeClass (( (ArrayTypeNode) visitedType ).getElementType().type.getType());
+            arrayType.setName(( (ArrayTypeNode) visitedType ).getElementType().getLabel());
+            ArrayType newArray = new ArrayType(identifier.getIdentifier(), arrayType);
+            HelperStore.arrays.put(newArray.arrayName, newArray);
         }
 
         return new TypeDeclarationNode(identifier, type, ctx.getStart().getLine());
@@ -178,7 +191,7 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
             if (HelperStore.scope != null){
                 RoutineDeclarationNode routine = HelperStore.routines.get(HelperStore.scope);
                 if (routine == null){
-                    throwException(ctx.getStart().getLine(), HelperStore.scope + " Routine doesn't exist");
+                    HelperStore.throwException(ctx.getStart().getLine(), HelperStore.scope + " routine doesn't exist");
                 }else{
                     if (routine.getVariables().get(ctx.Identifier().getText()) != null){
                         return new TypeNode(ctx.Identifier().getText(), ctx.getStart().getLine(),routine.getVariables().get(ctx.Identifier().getText()) );
@@ -187,7 +200,7 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
             }
 
             if (HelperStore.globalVariables.get(ctx.Identifier().getText()) == null){
-                throwException(ctx.getStart().getLine(), ctx.Identifier().getText() + " Doesn't exist");
+                HelperStore.throwException(ctx.getStart().getLine(), ctx.Identifier().getText() + " doesn't exist");
             }else{
                 return new TypeNode(ctx.Identifier().getText(), ctx.getStart().getLine(), HelperStore.globalVariables.get(ctx.Identifier().getText()));
             }
@@ -205,11 +218,11 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
     @Override
     public ASTNode visitPrimitiveType(ILangParser.PrimitiveTypeContext ctx) {
         if (ctx.INTEGER_KEYWORD() != null) {
-            return new TypeNode("Primitive type", ctx.getStart().getLine(), Type.INT);
+            return new TypeNode("Primitive type", ctx.getStart().getLine(), new TypeClass(Type.INT));
         } else if (ctx.REAL_KEYWORD() != null) {
-            return new TypeNode("Primitive type", ctx.getStart().getLine(), Type.REAL);
+            return new TypeNode("Primitive type", ctx.getStart().getLine(), new TypeClass(Type.REAL));
         } else if (ctx.BOOLEAN_KEYWORD() != null) {
-            return new TypeNode("Primitive type", ctx.getStart().getLine(), Type.BOOLEAN);
+            return new TypeNode("Primitive type", ctx.getStart().getLine(), new TypeClass(Type.BOOLEAN));
         }
 
         return null;
@@ -241,21 +254,22 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
      */
     @Override
     public ASTNode visitRecordType(ILangParser.RecordTypeContext ctx) {
-
+        HelperStore.isRecordScope = true;
         List<VariableDeclarationNode> variables = new ArrayList<>();
 
         for (int i = 0; i <  ctx.variableDeclaration().size() ; i++) {
             VariableDeclarationNode variable =  (VariableDeclarationNode) visit( ctx.variableDeclaration(i));
             for (VariableDeclarationNode variableDeclarationNode : variables) {
                 if (Objects.equals(variableDeclarationNode.getVariableName().getIdentifier(), variable.getVariableName().getIdentifier())) {
-                    throwException(ctx.getStart().getLine(), " variable " + variable.getVariableName().getIdentifier() + " already exists");
+                    HelperStore.throwException(ctx.getStart().getLine(), " variable " + variable.getVariableName().getIdentifier() + " already exists");
                     return null;
                 }
             }
             variables.add(variable);
         }
-
-        return new RecordTypeNode(variables, ctx.getStart().getLine());
+        HelperStore.isRecordScope = false;
+        RecordTypeNode newRecord = new RecordTypeNode(variables, ctx.getStart().getLine());
+        return newRecord;
     }
 
     /**
@@ -271,7 +285,7 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
         ExpressionNode arraySize = (ExpressionNode) visit(ctx.expression());
         Type type = HelperStore.typeAnalysis.analyzeExpression(ctx.expression());
         if (!type.equals(Type.INT)){
-            throwException(ctx.getStart().getLine(), "Array size is not of type INT");
+            HelperStore.throwException(ctx.getStart().getLine(), "Array size is not of type INT");
         }
         return new ArrayTypeNode(arrayType, arraySize, ctx.getStart().getLine());
     }
@@ -313,34 +327,53 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
     @Override
     public ASTNode visitAssignment(ILangParser.AssignmentContext ctx) {
         ModifiablePrimaryNode leftSide = (ModifiablePrimaryNode) visit(ctx.modifiablePrimary());
-        Type leftSideType = Type.RECORD;
+        Type leftSideType = null;
+
+        if (HelperStore.loopVaribles.contains(leftSide.getIdentifier().getIdentifier())){
+            HelperStore.throwException(ctx.getStart().getLine(), "Loop variable should be read-only");
+        }
+        // TODO: Проверить что мы не меняем loopVariable
         if (HelperStore.scope!=null) {
             if (HelperStore.routines.get(HelperStore.scope) != null) {
-                HashMap<String, Type> vars = HelperStore.routines.get(HelperStore.scope).getVariables();
+                HashMap<String, TypeClass> vars = HelperStore.routines.get(HelperStore.scope).getVariables();
                 if (vars.get(leftSide.getIdentifier().getIdentifier()) == null && HelperStore.globalVariables.get(leftSide.getIdentifier().getIdentifier()) == null) {
-                    throwException(ctx.getStart().getLine(), "Variable " + leftSide.getIdentifier().getIdentifier() + " does not exist");
+                    HelperStore.throwException(ctx.getStart().getLine(), "Variable " + leftSide.getIdentifier().getIdentifier() + " does not exist");
                 } else if (vars.get(leftSide.getIdentifier().getIdentifier()) != null){
-                    leftSideType = vars.get(leftSide.getIdentifier().getIdentifier());
+                    leftSideType = vars.get(leftSide.getIdentifier().getIdentifier()).getType();
                 } else if (HelperStore.globalVariables.get(leftSide.getIdentifier().getIdentifier()) == null){
-                    leftSideType = HelperStore.globalVariables.get(leftSide.getIdentifier().getIdentifier());
+                    leftSideType = HelperStore.globalVariables.get(leftSide.getIdentifier().getIdentifier()).getType();
                 }
             } else {
-                throwException(ctx.getStart().getLine(), "Routine " + HelperStore.scope + "does not exist");
+                HelperStore.throwException(ctx.getStart().getLine(), "Routine " + HelperStore.scope + "does not exist");
             }
         }else {
             if (HelperStore.globalVariables.get(leftSide.getIdentifier().getIdentifier()) == null){
-                throwException(ctx.getStart().getLine(), "Variable " + leftSide.getIdentifier().getIdentifier() + " does not exist");
+                HelperStore.throwException(ctx.getStart().getLine(), "Variable " + leftSide.getIdentifier().getIdentifier() + " does not exist");
             }else{
-                leftSideType = HelperStore.globalVariables.get(leftSide.getIdentifier().getIdentifier());
+                leftSideType = HelperStore.globalVariables.get(leftSide.getIdentifier().getIdentifier()).getType();
             }
         }
-
         Type rightSideType = HelperStore.typeAnalysis.analyzeExpression(ctx.expression());
         // возиожно временная заглушка
 
+
+
         if (leftSideType.equals(Type.INT) || leftSideType.equals(Type.BOOLEAN) || leftSideType.equals(Type.REAL)){
-            if (!rightSideType.equals(leftSideType)){
-                throwException(ctx.getStart().getLine(), "Expression should be of the same type as variable");
+            Type analizedCast = HelperStore.typeAnalysis.getPrimitiveType(leftSideType, rightSideType);
+            if (analizedCast==null){
+                HelperStore.throwException(ctx.getStart().getLine(), "Expression cannot be evaluated (invalid type conversion)");
+            }
+            if (!analizedCast.equals(leftSideType)){
+                HelperStore.throwException(ctx.getStart().getLine(), "Right side ("+rightSideType.toString()+") cannot be casted to left side("+leftSideType.toString()+")");
+            }
+        }else{
+            Type leftSideTypeAnalized = HelperStore.typeAnalysis.analyzeModifiablePrimary(ctx.modifiablePrimary());
+            Type analizedCast = HelperStore.typeAnalysis.getPrimitiveType(leftSideTypeAnalized, rightSideType);
+            if (analizedCast==null){
+                HelperStore.throwException(ctx.getStart().getLine(), "Expression cannot be evaluated (invalid type conversion)");
+            }
+            if (!analizedCast.equals(leftSideTypeAnalized)){
+                HelperStore.throwException(ctx.getStart().getLine(), "Right side ("+leftSideTypeAnalized.toString()+") cannot be casted to left side("+leftSideType.toString()+")");
             }
         }
 
@@ -362,7 +395,7 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
         }
 
         if (HelperStore.routines.get(ctx.Identifier().getText()) == null){
-            throwException(ctx.getStart().getLine(), "Routine "+ctx.Identifier().getText()+"does not exist");
+            HelperStore.throwException(ctx.getStart().getLine(), "Routine "+ctx.Identifier().getText()+"does not exist");
 //            return null;
         }else{
             IdentifierNode functionName = new IdentifierNode(ctx.Identifier().getText(), ctx.getStart().getLine());
@@ -371,12 +404,12 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
             List<ParameterDeclarationNode> routineParameters = HelperStore.routines.get(ctx.Identifier().getText()).getParameters();
 
             if (ctx.expression().size() != routineParameters.size()){
-                throwException(ctx.getStart().getLine(), "Number of arguments does not correspond to number of routine's parameters");
+                HelperStore.throwException(ctx.getStart().getLine(), "Number of arguments does not correspond to number of routine's parameters");
             }else{
                 for (int i = 0; i < ctx.expression().size(); i++) {
                     Type argumentType = HelperStore.typeAnalysis.analyzeExpression(ctx.expression(i));
-                    if (!routineParameters.get(i).getType().type.equals(argumentType)){
-                        throwException(ctx.getStart().getLine(), "Type of argument " + argumentType + " does not correspond to type of routine's parameter");
+                    if (!routineParameters.get(i).getType().type.getType().equals(argumentType)){
+                        HelperStore.throwException(ctx.getStart().getLine(), "Type of argument does not correspond to type of routine's parameter");
                     }
                     arguments.add((ExpressionNode) visit(ctx.expression(i)));
                 }
@@ -401,7 +434,9 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
         if (ctx.writeStatement() != null) {
             return visit(ctx.writeStatement());
         } else if (ctx.inputStatement() != null) {
-            return visit(ctx.inputStatement());
+            ASTNode input = visit(ctx.inputStatement());
+            return input;
+
         }
 
         return null;
@@ -417,7 +452,7 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
     public ASTNode visitWhileLoop(ILangParser.WhileLoopContext ctx) {
         ExpressionNode condition = (ExpressionNode) visit(ctx.expression());
         if (!HelperStore.typeAnalysis.analyzeExpression(ctx.expression()).equals(Type.BOOLEAN)){
-            throwException(ctx.getStart().getLine(), "Type of condition should be boolean");
+            HelperStore.throwException(ctx.getStart().getLine(), "Type of condition should be boolean");
         }
         BodyNode loopBody = (BodyNode) visit(ctx.body());
 
@@ -435,9 +470,33 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
         IdentifierNode loopVariable = new IdentifierNode(ctx.Identifier().getText(), ctx.getStart().getLine());
         boolean isReverse = ctx.REVERSE() != null;
 
+        if (HelperStore.isLoopVariable(loopVariable.getIdentifier())){
+            HelperStore.throwException(ctx.getStart().getLine(),loopVariable.getIdentifier()+" already exists");
+        }
+
+        if (HelperStore.globalVariables.get(loopVariable.getIdentifier()) != null){
+            HelperStore.throwException(ctx.getStart().getLine(), "Variable "+loopVariable.getIdentifier()+" is already initialized");
+        }
+
+        if (HelperStore.isVariableInRoutineParameters(loopVariable.getIdentifier()) || HelperStore.isVariableInRoutineScope(loopVariable.getIdentifier())){
+            HelperStore.throwException(ctx.getStart().getLine(), "Variable "+loopVariable.getIdentifier()+" is already initialized");
+        }
+
         // TODO: сделать скоп для фора с переменной лупа
         RangeNode range = (RangeNode) visit(ctx.range());
+        HelperStore.loopVaribles.add(loopVariable.getIdentifier());
+        if (HelperStore.scope != null){
+            HelperStore.routines.get(HelperStore.scope).putVariable(loopVariable.getIdentifier(), new TypeClass(Type.INT));
+        }else{
+            HelperStore.globalVariables.put(loopVariable.getIdentifier(), new TypeClass(Type.INT));
+        }
         BodyNode loopBody = (BodyNode) visit(ctx.body());
+        HelperStore.loopVaribles.remove(HelperStore.loopVaribles.size() - 1);
+        if (HelperStore.scope != null){
+            HelperStore.routines.get(HelperStore.scope).removeVariable(loopVariable.getIdentifier());
+        }else{
+            HelperStore.globalVariables.remove(loopVariable.getIdentifier());
+        }
 
         return new ForLoopNode(loopVariable, isReverse, range, loopBody, ctx.getStart().getLine());
 
@@ -455,7 +514,7 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
         ExpressionNode endValue = (ExpressionNode) visit(ctx.expression(1));
 
         if (!(HelperStore.typeAnalysis.analyzeExpression(ctx.expression(0)).equals(Type.INT) && HelperStore.typeAnalysis.analyzeExpression(ctx.expression(1)).equals(Type.INT))){
-            throwException(ctx.getStart().getLine(), "Range should consist of two integer numbers");
+            HelperStore.throwException(ctx.getStart().getLine(), "Range should consist of two integer numbers");
         }
 
         return new RangeNode(startValue, endValue, ctx.getStart().getLine());
@@ -471,7 +530,7 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
     public ASTNode visitIfStatement(ILangParser.IfStatementContext ctx) {
         ExpressionNode condition = (ExpressionNode) visit(ctx.expression());
         if (!HelperStore.typeAnalysis.analyzeExpression(ctx.expression()).equals(Type.BOOLEAN)){
-            throwException(ctx.getStart().getLine(), "Type of condition should be boolean");
+            HelperStore.throwException(ctx.getStart().getLine(), "Type of condition should be boolean");
         }
 
         BodyNode ifBody = (BodyNode) visit(ctx.body(0));
@@ -493,7 +552,7 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
     @Override
     public ASTNode visitRoutineDeclaration(ILangParser.RoutineDeclarationContext ctx) {
         if ( HelperStore.routines.get(ctx.Identifier().getText()) != null){
-            throwException(ctx.getStart().getLine(), "Routine "+ctx.Identifier().getText()+" exists");
+            HelperStore.throwException(ctx.getStart().getLine(), "Routine "+ctx.Identifier().getText()+" exists");
             return null;
         }
 
@@ -509,10 +568,17 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
             returnType = (TypeNode) visit(ctx.type());
         }
 
+        RoutineDeclarationNode routineBeforeBody = new RoutineDeclarationNode(routineName,parameters,returnType,null,ctx.getStart().getLine());
+
+        for (ParameterDeclarationNode parameter : parameters) {
+            routineBeforeBody.putVariable(parameter.getParameterName().getIdentifier(), parameter.getType().type);
+        }
+
+        HelperStore.routines.put(routineName.getIdentifier(),routineBeforeBody);
+
         HelperStore.scope = routineName.getIdentifier();
         BodyNode routineBody = (BodyNode) visit(ctx.body());
         HelperStore.scope = null;
-
 
         RoutineDeclarationNode routine = new RoutineDeclarationNode(routineName,parameters,returnType,routineBody,ctx.getStart().getLine());
 
@@ -536,7 +602,7 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
 
             for (ParameterDeclarationNode parameterDeclarationNode : parameterList) {
                 if (parameterDeclarationNode.getParameterName().getIdentifier().equals(parameter.getParameterName().getIdentifier())) {
-                    throwException(ctx.getStart().getLine(), "Parameters' names should be different");
+                    HelperStore.throwException(ctx.getStart().getLine(), "Parameters' names should be different");
                 }
             }
 
@@ -556,6 +622,10 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
     public ASTNode visitParameterDeclaration(ILangParser.ParameterDeclarationContext ctx) {
         IdentifierNode parameterName = new IdentifierNode(ctx.Identifier().getText(), ctx.getStart().getLine());
         TypeNode parameterType = (TypeNode) visit(ctx.type());
+
+        if (parameterType.type.getType() == Type.RECORD){
+            parameterType.type.setName(ctx.type().getText());
+        }
 
         return new ParameterDeclarationNode(parameterName, parameterType, ctx.getStart().getLine());
     }
@@ -634,8 +704,18 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
     @Override
     public ASTNode visitReturnStatement(ILangParser.ReturnStatementContext ctx) {
         ExpressionNode expression = null;
+        if (HelperStore.scope == null){
+            HelperStore.throwException(ctx.getStart().getLine(), "Unnecessary return statement");
+        }
+
         if (ctx.expression() != null){
             expression = (ExpressionNode) visit(ctx.expression());
+            Type typeExpression = HelperStore.typeAnalysis.analyzeExpression(ctx.expression());
+            if (HelperStore.scope != null){
+                if (HelperStore.routines.get(HelperStore.scope).getReturnType().type.getType() != typeExpression){
+                    HelperStore.throwException(ctx.getStart().getLine(), "RETURN TYPE does not match with the expression type");
+                }
+            }
         }
 
         return new ReturnStatementNode(expression,ctx.getStart().getLine());
@@ -877,7 +957,12 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
 
         if (ctx.expression() != null){
             expression = (ExpressionNode) visit(ctx.expression());
+            Type expressionType = HelperStore.typeAnalysis.analyzeExpression(ctx.expression());
+            if (expressionType == Type.ARRAY || expressionType == Type.RECORD){
+                HelperStore.throwException(ctx.getStart().getLine(), "Only PRIMITIVE TYPE can be printed using WRITE routine");
+            }
         }
+
 
         if (ctx.WRITE() != null) {
             return new WriteStatementNode(WriteType.WRITE, expression, ctx.getStart().getLine());
@@ -899,6 +984,11 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
     @Override
     public ASTNode visitInputStatement(ILangParser.InputStatementContext ctx) {
         TypeNode type = (TypeNode) visit(ctx.type());
+        if (type.type.getType() == Type.ARRAY || type.type.getType() == Type.RECORD){
+            HelperStore.throwException(ctx.getStart().getLine(), "Only PRIMITIVE TYPE can be treated as an INPUT");
+        }
+
+        HelperStore.inputType = type.type;
         return new InputStatementNode(type, ctx.getStart().getLine());
 
     }

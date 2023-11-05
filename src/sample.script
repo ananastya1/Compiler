@@ -1,14 +1,26 @@
-var a : integer is 1.5
-var a : integer is 1.5
-var a : integer is 1.5
+type Triangle is record
+    var side1: real;
+    var side2: real;
+    var side3: real;
+end
 
-//routine factorial(n: integer) : integer is
-//begin
-//    if n <= 1 then
-//        return 1;
-//    else
-//       return n * factorial(n - 1);
-//    end;
-//end
-//var a: integer is input(integer);
-//var result: integer is factorial(a);
+routine is_right_triangle(t: Triangle) is
+    type sides is array[3] real
+    sides[0] := false
+    sides[1] := t.side1
+    sides[2] := t.side2
+    sides[3] := t.side3
+    var a: real is sides[1];
+    var b: real is sides[2];
+    var c: real is sides[3];
+    if a*a + b*b = c*c then
+        write(true);
+    else
+        write(false);
+    end;
+end
+var my_triangle: Triangle;
+my_triangle.side1 := 3.0;
+my_triangle.side2 := 4.0;
+my_triangle.side3 := 5.0;
+is_right_triangle(my_triangle);

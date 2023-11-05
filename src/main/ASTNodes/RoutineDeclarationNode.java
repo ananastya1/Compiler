@@ -7,8 +7,7 @@ public class RoutineDeclarationNode extends ASTNode {
     private IdentifierNode procedureName;
 //    private ParametersNode parameters;
     private TypeNode returnType;
-    private String routineType;
-    private HashMap<String, Type> variables;
+    private HashMap<String, TypeClass> variables = new HashMap<>();
     private List<ParameterDeclarationNode> parameters = new ArrayList<>();
     private BodyNode body;
 
@@ -28,7 +27,7 @@ public class RoutineDeclarationNode extends ASTNode {
         return parameters;
     }
 
-    public ASTNode getReturnType() {
+    public TypeNode getReturnType() {
         return returnType;
     }
 
@@ -36,16 +35,15 @@ public class RoutineDeclarationNode extends ASTNode {
         return body;
     }
 
-    public String getRoutineType() {
-        return routineType;
-    }
-
-    public HashMap<String, Type> getVariables() {
+    public HashMap<String, TypeClass> getVariables() {
         return variables;
     }
 
-    public void putVariable(String name ,Type type){
+    public void putVariable(String name ,TypeClass type){
         this.variables.put(name, type);
+    }
+    public void removeVariable(String name){
+        this.variables.remove(name);
     }
 
     @Override
