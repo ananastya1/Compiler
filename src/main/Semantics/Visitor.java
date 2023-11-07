@@ -88,6 +88,8 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
         }
         HelperStore.inputType = null;
 
+        String a = ctx.getText();
+
         if (!HelperStore.isRecordScope){
             if (HelperStore.isLoopVariable(identifier.getIdentifier())){
                 HelperStore.throwException(ctx.getStart().getLine()," Variable should not be the same as the loop variable");
@@ -97,7 +99,7 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
                 if (HelperStore.isVariableInRoutineScope(identifier.getIdentifier()) ||
                         HelperStore.isVariableInRoutineParameters(identifier.getIdentifier())){
 
-                    HelperStore.throwException(ctx.getStart().getLine(), identifier.getIdentifier() + " already exists");
+                   HelperStore.throwException(ctx.getStart().getLine(), identifier.getIdentifier() + " already exists");
                 }else{
                     RoutineDeclarationNode routine = HelperStore.routines.get(HelperStore.scope);
                     routine.putVariable(identifier.getIdentifier(), type);
@@ -166,7 +168,8 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
         }else if (type.getType() == Type.ARRAY){
             TypeClass arrayType = new TypeClass (( (ArrayTypeNode) visitedType ).getElementType().type.getType());
             arrayType.setName(( (ArrayTypeNode) visitedType ).getElementType().getLabel());
-            ArrayType newArray = new ArrayType(identifier.getIdentifier(), arrayType);
+
+            ArrayType newArray = new ArrayType(identifier.getIdentifier(), arrayType, ( (ArrayTypeNode) visitedType ).getArraySizeInt());
             HelperStore.arrays.put(newArray.arrayName, newArray);
         }
 
@@ -282,12 +285,32 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
     public ASTNode visitArrayType(ILangParser.ArrayTypeContext ctx) {
 
         TypeNode arrayType = (TypeNode) visit(ctx.type());
-        ExpressionNode arraySize = (ExpressionNode) visit(ctx.expression());
-        Type type = HelperStore.typeAnalysis.analyzeExpression(ctx.expression());
-        if (!type.equals(Type.INT)){
-            HelperStore.throwException(ctx.getStart().getLine(), "Array size is not of type INT");
+        if (HelperStore.isParameterScope && ctx.expression() != null){
+            HelperStore.throwException(ctx.getStart().getLine(), "Array size should not be mentioned in routine parameter's declaration");
+        }else if (!HelperStore.isParameterScope && ctx.expression() == null){
+            HelperStore.throwException(ctx.getStart().getLine(), "Array size is not defined");
         }
-        return new ArrayTypeNode(arrayType, arraySize, ctx.getStart().getLine());
+
+        ExpressionNode arraySize = null;
+        int arraySizeInt = 0;
+        Type type = null;
+        if (ctx.expression() != null){
+            arraySize = (ExpressionNode) visit(ctx.expression());
+            try {
+                arraySizeInt = Integer.parseInt(ctx.expression().getText());
+            } catch ( NumberFormatException e){
+                HelperStore.throwException(ctx.getStart().getLine(), "Array size is not INTEGER literal");
+            }
+
+        }
+        if (ctx.expression() != null){
+            type = HelperStore.typeAnalysis.analyzeExpression(ctx.expression());
+            if (!type.equals(Type.INT)){
+                HelperStore.throwException(ctx.getStart().getLine(), "Array size is not of type INT");
+            }
+        }
+
+        return new ArrayTypeNode(arrayType, arraySize, arraySizeInt, ctx.getStart().getLine());
     }
 
     /**
@@ -332,7 +355,6 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
         if (HelperStore.loopVaribles.contains(leftSide.getIdentifier().getIdentifier())){
             HelperStore.throwException(ctx.getStart().getLine(), "Loop variable should be read-only");
         }
-        // TODO: Проверить что мы не меняем loopVariable
         if (HelperStore.scope!=null) {
             if (HelperStore.routines.get(HelperStore.scope) != null) {
                 HashMap<String, TypeClass> vars = HelperStore.routines.get(HelperStore.scope).getVariables();
@@ -353,7 +375,9 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
                 leftSideType = HelperStore.globalVariables.get(leftSide.getIdentifier().getIdentifier()).getType();
             }
         }
+        ExpressionNode rightSide = (ExpressionNode) visit(ctx.expression());
         Type rightSideType = HelperStore.typeAnalysis.analyzeExpression(ctx.expression());
+        HelperStore.inputType = null;
         // возиожно временная заглушка
 
 
@@ -376,8 +400,6 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
                 HelperStore.throwException(ctx.getStart().getLine(), "Right side ("+leftSideTypeAnalized.toString()+") cannot be casted to left side("+leftSideType.toString()+")");
             }
         }
-
-        ExpressionNode rightSide = (ExpressionNode) visit(ctx.expression());
 
         return new AssignmentNode(leftSide,rightSide, ctx.getStart().getLine());
     }
@@ -482,7 +504,6 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
             HelperStore.throwException(ctx.getStart().getLine(), "Variable "+loopVariable.getIdentifier()+" is already initialized");
         }
 
-        // TODO: сделать скоп для фора с переменной лупа
         RangeNode range = (RangeNode) visit(ctx.range());
         HelperStore.loopVaribles.add(loopVariable.getIdentifier());
         if (HelperStore.scope != null){
@@ -621,7 +642,10 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
     @Override
     public ASTNode visitParameterDeclaration(ILangParser.ParameterDeclarationContext ctx) {
         IdentifierNode parameterName = new IdentifierNode(ctx.Identifier().getText(), ctx.getStart().getLine());
+
+        HelperStore.isParameterScope = true;
         TypeNode parameterType = (TypeNode) visit(ctx.type());
+        HelperStore.isParameterScope = false;
 
         if (parameterType.type.getType() == Type.RECORD){
             parameterType.type.setName(ctx.type().getText());
@@ -641,40 +665,41 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
         List<OneLineBodyNode> lines = new ArrayList<>();
 
         for (ParseTree child : ctx.children) {
+
             if (child instanceof ILangParser.SimpleDeclarationContext) {
                 OneLineBodyNode line = new OneLineBodyNode(
                         (SimpleDeclarationNode) visit(child),
                         ctx.getStart().getLine());
                 lines.add(line);
             } else if (child instanceof ILangParser.StatementContext) {
-
-                if ( visit(child) instanceof AssignmentNode ){
+                    ASTNode visited = visit(child);
+                if ( visited instanceof AssignmentNode ){
                     OneLineBodyNode line = new OneLineBodyNode(
-                            (AssignmentNode) visit(child),
+                            (AssignmentNode) visited,
                             ctx.getStart().getLine());
 
                     lines.add(line);
-                } else if ( visit(child) instanceof RoutineCallNode ){
+                } else if ( visited instanceof RoutineCallNode ){
                     OneLineBodyNode line = new OneLineBodyNode(
-                            (RoutineCallNode) visit(child),
+                            (RoutineCallNode) visited,
                             ctx.getStart().getLine());
 
                     lines.add(line);
-                } else if ( visit(child) instanceof WhileLoopNode ){
+                } else if ( visited instanceof WhileLoopNode ){
                     OneLineBodyNode line = new OneLineBodyNode(
-                            (WhileLoopNode) visit(child),
+                            (WhileLoopNode) visited,
                             ctx.getStart().getLine());
 
                     lines.add(line);
-                } else if ( visit(child) instanceof ForLoopNode ){
+                } else if ( visited instanceof ForLoopNode ){
                     OneLineBodyNode line = new OneLineBodyNode(
-                            (ForLoopNode) visit(child),
+                            (ForLoopNode) visited,
                             ctx.getStart().getLine());
 
                     lines.add(line);
-                } else if ( visit(child) instanceof IfStatementNode ){
+                } else if ( visited instanceof IfStatementNode ){
                     OneLineBodyNode line = new OneLineBodyNode(
-                            (IfStatementNode) visit(child),
+                            (IfStatementNode) visited,
                             ctx.getStart().getLine());
 
                     lines.add(line);

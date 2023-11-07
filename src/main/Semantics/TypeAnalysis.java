@@ -153,20 +153,22 @@ public class TypeAnalysis {
                     record = HelperStore.records.get(variableType.getName());
                 }
 
-
+                String asd = ctx.getText();
                 identifiers.remove(0);
                 if (record != null){
                     finishedType = record.getVariableType(identifiers);
+
                 } else if (array != null){
                     finishedType = array.getVariableType(identifiers);
+
                 }else{
                     HelperStore.throwException(ctx.getStart().getLine(), "Unknown type is caught :)");
                 }
 
 
                 if (finishedType == null){
-                    for (int i = 0; i < identifiers.size(); i++) {
-                        if (identifiers.get(i).equals("0")){
+                    for (String identifier : identifiers) {
+                        if (identifier.equals("0")) {
                             HelperStore.throwException(ctx.getStart().getLine(), "Attempt to access an array element from non ARRAY TYPE");
                         }
                     }
@@ -212,7 +214,7 @@ public class TypeAnalysis {
         } else if (leftType == Type.REAL && rightType == Type.BOOLEAN){
             return Type.REAL;
         } else if (leftType == Type.BOOLEAN && rightType == Type.BOOLEAN){
-            return Type.INT;
+            return Type.BOOLEAN;
         } else if (leftType == Type.BOOLEAN && rightType == Type.INT){
             return Type.INT;
         } else if (leftType == Type.BOOLEAN && rightType == Type.REAL){

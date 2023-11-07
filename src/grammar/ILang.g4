@@ -86,7 +86,7 @@ userType: arrayType | recordType ;
 
 recordType: RECORD variableDeclaration*  END;
 
-arrayType: ARRAY LBRACK expression RBRACK type;
+arrayType: ARRAY LBRACK expression? RBRACK type;
 
 statement: assignment
          | routineCall
