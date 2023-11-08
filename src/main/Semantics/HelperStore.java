@@ -21,6 +21,7 @@ public class HelperStore {
     static boolean isLoopVariable(String variableName){
         return loopVaribles.contains(variableName);
     }
+
     static boolean isVariableInRoutineScope(String variableName){
         if (scope == null){
             return false;

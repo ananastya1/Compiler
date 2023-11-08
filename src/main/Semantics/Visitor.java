@@ -950,6 +950,10 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
     public ASTNode visitModifiablePrimary(ILangParser.ModifiablePrimaryContext ctx) {
         IdentifierNode identifier = new IdentifierNode(ctx.Identifier(0).getText(), ctx.getStart().getLine());
 
+        if (HelperStore.typeAnalysis.analyzeModifiablePrimary(ctx) == null) {
+            HelperStore.throwException(ctx.getStart().getLine(), "Variable '"+ctx.Identifier(0).getText()+"' does not exist");
+        };
+
         List<ModifiablePrimaryRightPartNode> right = new ArrayList<>();
 
         for (int i = 1; i < ctx.getChildCount(); i++) {
