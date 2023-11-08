@@ -1,10 +1,4 @@
-routine max(a: integer, b: integer) : integer is
-    if a > b then
-        return a;
-    else
-        return b;
-    end; 
+
+if true or false then
+    write(1)
 end
-var x: integer is 10;
-var y: integer is 15;
-var max_value: integer is max(x, y);

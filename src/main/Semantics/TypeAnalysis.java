@@ -96,7 +96,9 @@ public class TypeAnalysis {
 
             RoutineDeclarationNode routine = HelperStore.routines.get(routineName);
             if (routine != null){
-                return routine.getReturnType().type.getType();
+                if (routine.getReturnType() != null) {
+                    return routine.getReturnType().type.getType();
+                }
             }
             return null;
             // Обработка вызовов рутины
@@ -182,7 +184,10 @@ public class TypeAnalysis {
             } else {
                 if (HelperStore.scope != null) {
                     RoutineDeclarationNode routine = HelperStore.routines.get(HelperStore.scope);
-                    Type type = routine.getVariables().get(modifiablePrimaryName).getType();
+                    Type type = null;
+                    if (routine.getVariables().get(modifiablePrimaryName) != null){
+                        type = routine.getVariables().get(modifiablePrimaryName).getType();
+                    }
                     if (type != null) {
                         return type;
                     }
@@ -194,7 +199,12 @@ public class TypeAnalysis {
                         }
                     }
                 }
-                return HelperStore.globalVariables.get(modifiablePrimaryName).getType();
+
+                if (HelperStore.globalVariables.get(modifiablePrimaryName) != null){
+                    return HelperStore.globalVariables.get(modifiablePrimaryName).getType();
+                }
+                return  null;
+
             }
         }
         return null;

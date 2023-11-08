@@ -163,7 +163,6 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
         if (type.getType() == Type.RECORD){
             List<VariableDeclarationNode> variables = ( (RecordTypeNode) visitedType ).getVariableDeclarations();
             RecordType newRecord = new RecordType(identifier.getIdentifier(),variables);
-            System.out.println("Hello world");
             HelperStore.records.put(identifier.getIdentifier(), newRecord);
         }else if (type.getType() == Type.ARRAY){
             TypeClass arrayType = new TypeClass (( (ArrayTypeNode) visitedType ).getElementType().type.getType());
@@ -379,8 +378,6 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
         Type rightSideType = HelperStore.typeAnalysis.analyzeExpression(ctx.expression());
         HelperStore.inputType = null;
         // возиожно временная заглушка
-
-
 
         if (leftSideType.equals(Type.INT) || leftSideType.equals(Type.BOOLEAN) || leftSideType.equals(Type.REAL)){
             Type analizedCast = HelperStore.typeAnalysis.getPrimitiveType(leftSideType, rightSideType);
@@ -732,15 +729,20 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
         if (HelperStore.scope == null){
             HelperStore.throwException(ctx.getStart().getLine(), "Unnecessary return statement");
         }
+        Type routineType = null;
+        Type typeExpression = null;
+
+        if (HelperStore.routines.get(HelperStore.scope).getReturnType() != null){
+            routineType = HelperStore.routines.get(HelperStore.scope).getReturnType().type.getType();
+        }
 
         if (ctx.expression() != null){
             expression = (ExpressionNode) visit(ctx.expression());
-            Type typeExpression = HelperStore.typeAnalysis.analyzeExpression(ctx.expression());
-            if (HelperStore.scope != null){
-                if (HelperStore.routines.get(HelperStore.scope).getReturnType().type.getType() != typeExpression){
-                    HelperStore.throwException(ctx.getStart().getLine(), "RETURN TYPE does not match with the expression type");
-                }
-            }
+            typeExpression = HelperStore.typeAnalysis.analyzeExpression(ctx.expression());
+        }
+
+        if (routineType != typeExpression){
+            HelperStore.throwException(ctx.getStart().getLine(), "RETURN TYPE does not match with the expression type");
         }
 
         return new ReturnStatementNode(expression,ctx.getStart().getLine());
