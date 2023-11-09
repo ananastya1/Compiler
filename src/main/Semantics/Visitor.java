@@ -952,7 +952,7 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
 
         if (HelperStore.typeAnalysis.analyzeModifiablePrimary(ctx) == null) {
             HelperStore.throwException(ctx.getStart().getLine(), "Variable '"+ctx.Identifier(0).getText()+"' does not exist");
-        };
+        }
 
         List<ModifiablePrimaryRightPartNode> right = new ArrayList<>();
 
