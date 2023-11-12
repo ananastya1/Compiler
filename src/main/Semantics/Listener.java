@@ -28,17 +28,13 @@ public class Listener extends ILangBaseListener{
     @Override
     public void exitExpression(ILangParser.ExpressionContext ctx) {
         super.exitExpression(ctx);
-        System.out.println(ctx.getText());
     }
 
     private String optimize(String expression){
-        // TODO and or xor /= замменить как в js
-        expression = expression.replaceAll("and", "&&");
-        expression = expression.replaceAll("or", "||");
-        expression = expression.replaceAll("xor", "^");
-        expression = expression.replaceAll("/=", "!=");
-
-        System.out.println(expression);
+        expression = expression.replaceAll("and", " && ");
+        expression = expression.replaceAll("xor", " ^ ");
+        expression = expression.replaceAll("or", " || ");
+        expression = expression.replaceAll("/=", " != ");
 
         Object result = evalCtx.eval("js", expression);
         return result.toString();

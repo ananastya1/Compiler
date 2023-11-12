@@ -49,11 +49,27 @@ public class HelperStore {
 
     static public void throwException(Integer line, String exception) {
         try {
-            throw new Exception("Line-[" + line + "] " + exception);
+            String ANSI_RESET = "\u001B[0m";
+            String ANSI_RED = "\u001B[31m";
+
+            throw new Exception(ANSI_RED + "Line-[" + line + "] " + exception + ANSI_RESET);
 
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
         System.exit(1);
+    }
+
+    static void clearVariables() {
+        scope = null;
+        isRecordScope = false;
+        isParameterScope = false;
+        loopVaribles.clear();
+        typeAnalysis = new TypeAnalysis();
+        globalVariables.clear();
+        routines.clear();
+        records.clear();
+        arrays.clear();
+        inputType = null;
     }
 }

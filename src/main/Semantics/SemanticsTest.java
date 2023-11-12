@@ -10,18 +10,18 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class SemanticsTest {
     public static void main(String[] args) throws Exception{
 
         String content = readFile("src/sample.script");
-        CharStream input = CharStreams.fromString(content);
-        ILangLexer lexer = new ILangLexer(input);
-        CommonTokenStream tokens = new CommonTokenStream(lexer);
-        ILangParser parser = new ILangParser(tokens);
+
+        ParseTree tree = treeCreate(content);
 
 
-        ParseTree tree = parser.main();
+
         System.out.println(tree.toStringTree());
 
         Visitor visitor = new Visitor();
@@ -29,31 +29,53 @@ public class SemanticsTest {
         ASTNode node = visitor.visit(tree);
         System.out.println("AST created");
 
+        HelperStore.clearVariables();
+
         Listener listener = new Listener();
 
         String optimizedContent = content;
-
+//        System.out.println(content+"\n\n");
         ParseTreeWalker walker = new ParseTreeWalker();
         walker.walk(listener, tree);
 
         Set<String> keys = Listener.expressions.keySet();
 
+
         for (String key:keys) {
-            String formattedExpression = key.replaceAll("(\\\\+|\\\\-|\\\\*|/|%|<|<=|>|>=|=|/=|xor|or|and)", " $1 ");
-//            String[] expressionArray = formattedExpression.split("\\s+");
-//            String expressionForFinding = "(["
-            System.out.println("this" + formattedExpression);
-            optimizedContent = optimizedContent.replaceAll(key, Listener.expressions.get(key));
+
+            String output = key.replaceAll("([\\\\+\\\\*])", " \\\\$1 ");
+            output = output.replaceAll("([-/%])", " $1 ");
+            output = output.replaceAll("(and|or|xor|&&)", " $1 ");
+            String [] outarr = output.split("\\s");
+            StringBuilder newString = new StringBuilder();
+            for (String i : outarr){
+                newString.append("\\s*").append(i);
+            }
+            newString.append("\\s*");
+            String s ="("+newString+")";
+            //System.out.println(s);
+            String sWithEndLine = "("+newString+"\n)";
+            Pattern pattern = Pattern.compile(sWithEndLine);
+            Matcher matcher = pattern.matcher(optimizedContent);
+            if (matcher.find()){
+                optimizedContent =  matcher.replaceAll(" " + Listener.expressions.get(key)+"\n");}
+            else{
+                Pattern pattern2 = Pattern.compile(s);
+                Matcher matcher2 = pattern2.matcher(optimizedContent);
+                optimizedContent = matcher2.replaceAll(" " + Listener.expressions.get(key)+ " ");}
         }
 
-        System.out.println(tree.getText() + "\n\n");
+
+
+        ParseTree treeOptimized = treeCreate(optimizedContent);
+        System.out.println(treeOptimized.toStringTree());
+
         System.out.println(optimizedContent);
 
-        String filePath = "src/sampleOptimized.script";
-        FileWriter writer = new FileWriter(filePath, true);
-        writer.write(content);
-        writer.close();
-        File file = new File(filePath);
+        Visitor visitorOptimized = new Visitor();
+
+        ASTNode nodeOptimized = visitorOptimized.visit(treeOptimized);
+        System.out.println("AST created");
 
     }
 
@@ -61,4 +83,16 @@ public class SemanticsTest {
         byte[] encoded = Files.readAllBytes(Paths.get(path));
         return new String(encoded);
     }
+
+    private static ParseTree treeCreate(String content) throws IOException {
+        CharStream input = CharStreams.fromString(content);
+        ILangLexer lexer = new ILangLexer(input);
+        CommonTokenStream tokens = new CommonTokenStream(lexer);
+        ILangParser parser = new ILangParser(tokens);
+        parser.removeErrorListeners();
+        parser.addErrorListener(new ErrorListener());
+        ParseTree tree = parser.main();
+        return tree;
+    }
+
 }

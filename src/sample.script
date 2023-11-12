@@ -1,1 +1,18 @@
-var a is true or false
+var rowsNums: integer is 3;
+var columnsNums: integer is rowsNums + 4 + 1 + 2;
+
+type columns is array[columnsNums] integer;
+type matrix is array[3] columns;
+
+for i in 1..rowsNums loop
+    for j in 1..columnsNums loop
+        matrix[i][j] := i * columnsNums + j;
+    end;
+end;
+// Matrix
+for i in 1..rowsNums loop
+    for j in 1..columnsNums loop
+        writes(matrix[i][j]);
+    end;
+ writeln();
+end;
