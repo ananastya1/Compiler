@@ -15,20 +15,28 @@ public class Listener extends ILangBaseListener{
         super.enterExpression(ctx);
         try{
             String optimized = optimize(ctx.getText());
+            System.out.println("optimized " + optimized);
 
-            expressions.put(ctx.getText(), optimized);
-//            System.out.println(ctx.getText() + " - " + optimized);
+            String splitted = ctx.getText().split(">|<|>=|<=|\\+|-|xor|or|and|\\*|=|/|/=")[0];
+            try{
+                if ((Float.parseFloat(splitted)) ==
+                        (Float.parseFloat(String.valueOf(Integer.parseInt(splitted))))){
+                    optimized = String.valueOf((int)(Float.parseFloat(optimized)));
+                }
+            }
+            catch (Exception ignored){
+//                System.out.println(ignored);
+            }
+            if (!ctx.getText().equals(optimized)){
+                expressions.put(ctx.getText(), optimized);
+            }
+            //System.out.println(ctx.getText() + " - " + optimized);
         } catch (Exception ignored){
-
+//            System.out.println("Exception :"+ ignored);
         }
-
-
     }
 
-    @Override
-    public void exitExpression(ILangParser.ExpressionContext ctx) {
-        super.exitExpression(ctx);
-    }
+
 
     private String optimize(String expression){
         expression = expression.replaceAll("and", " && ");

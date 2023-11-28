@@ -595,11 +595,16 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
         HelperStore.routines.put(routineName.getIdentifier(),routineBeforeBody);
 
         HelperStore.scope = routineName.getIdentifier();
+        HelperStore.return_exists=false;
         BodyNode routineBody = (BodyNode) visit(ctx.body());
+        if (!HelperStore.return_exists && returnType!=null){
+            HelperStore.throwException(ctx.getStart().getLine(), "Routine return statement does not exist");
+        }
         HelperStore.scope = null;
-
+        HelperStore.return_exists=false;
         RoutineDeclarationNode routine = new RoutineDeclarationNode(routineName,parameters,returnType,routineBody,ctx.getStart().getLine());
 
+        routine.variables = routineBeforeBody.variables;
         HelperStore.routines.put(routineName.getIdentifier(),routine);
         return routine;
     }
@@ -660,7 +665,6 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
     @Override
     public ASTNode visitBody(ILangParser.BodyContext ctx) {
         List<OneLineBodyNode> lines = new ArrayList<>();
-
         for (ParseTree child : ctx.children) {
 
             if (child instanceof ILangParser.SimpleDeclarationContext) {
@@ -709,9 +713,13 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
                         (ReturnStatementNode) visit(child),
                         ctx.getStart().getLine());
                 lines.add(line);
+                HelperStore.return_exists = true;
+
             }
 
+
         }
+
 
         return new BodyNode(lines, ctx.getStart().getLine());
 

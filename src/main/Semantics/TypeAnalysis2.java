@@ -1,10 +1,10 @@
 import java.util.ArrayList;
 import java.util.List;
 
-public class TypeAnalysis {
+public class TypeAnalysis2 {
 
 
-    public Type analyzeExpression(ILangParser.ExpressionContext ctx) {
+    public Type analyzeExpression(IlangCodeGenerationParser.ExpressionContext ctx) {
         if (ctx.relation() != null) {
             if (ctx.relation().size() == 1) {
                 return analyzeRelation(ctx.relation(0));
@@ -14,7 +14,7 @@ public class TypeAnalysis {
         return null;
     }
 
-    public Type analyzeRelation(ILangParser.RelationContext ctx) {
+    public Type analyzeRelation(IlangCodeGenerationParser.RelationContext ctx) {
         if (ctx.simple() != null) {
             if (ctx.simple().size() == 1) {
                 return analyzeSimple(ctx.simple(0));
@@ -25,39 +25,39 @@ public class TypeAnalysis {
     }
 
     // (MUL, DIV, MOD, PLUS, MINUS)
-    public Type analyzeSimple(ILangParser.SimpleContext ctx) {
-        if (ctx.factor() == null) {
-            return null;
-        }
-
-        if (ctx.factor().size() == 1) {
-            return analyzeFactor(ctx.factor(0));
-        }
-
-        Type leftType = analyzeFactor(ctx.factor(0));
-        Type rightType = analyzeFactor(ctx.factor(1));
-        return getPrimitiveType(leftType, rightType);
-
-    }
-
-
-    // (PLUS, MINUS)
-    public Type analyzeFactor(ILangParser.FactorContext ctx) {
+    public Type analyzeSimple(IlangCodeGenerationParser.SimpleContext ctx) {
         if (ctx.summand() == null) {
             return null;
         }
+
         if (ctx.summand().size() == 1) {
             return analyzeSummand(ctx.summand(0));
         }
 
         Type leftType = analyzeSummand(ctx.summand(0));
         Type rightType = analyzeSummand(ctx.summand(1));
+        return getPrimitiveType(leftType, rightType);
+
+    }
+
+
+    // (PLUS, MINUS)
+    public Type analyzeSummand(IlangCodeGenerationParser.SummandContext ctx) {
+        if (ctx.factor() == null) {
+            return null;
+        }
+        if (ctx.factor().size() == 1) {
+            return analyzeFactor(ctx.factor(0));
+        }
+
+        Type leftType = analyzeFactor(ctx.factor(0));
+        Type rightType = analyzeFactor(ctx.factor(1));
 
         return getPrimitiveType(leftType, rightType);
     }
 
     // (MUL, DIV, MOD)
-    public Type analyzeSummand(ILangParser.SummandContext ctx) {
+    public Type analyzeFactor(IlangCodeGenerationParser.FactorContext ctx) {
 
         if (ctx.primary() != null) {
             return analyzePrimary(ctx.primary());
@@ -70,7 +70,7 @@ public class TypeAnalysis {
 
     }
 
-    public Type analyzePrimary(ILangParser.PrimaryContext ctx) {
+    public Type analyzePrimary(IlangCodeGenerationParser.PrimaryContext ctx) {
         if (ctx.IntegerLiteral() != null) {
             return Type.INT;
 
@@ -91,6 +91,18 @@ public class TypeAnalysis {
                 return type;
             }
 
+            if (ctx.getText().contains("input")){
+                String newText = ctx.getText().replaceAll("input", "");
+
+                if (newText.equals("(integer)")){
+                    return Type.INT;
+                }else if(newText.equals("(real)")){
+                    return Type.REAL;
+                }else if(newText.equals("(boolean)")){
+                    return Type.BOOLEAN;
+                }
+            }
+
             String routineName = ctx.routineCall().Identifier().getText();
             RoutineDeclarationNode routine = HelperStore.routines.get(routineName);
 
@@ -109,7 +121,7 @@ public class TypeAnalysis {
         return null;
     }
 
-    public Type analyzeModifiablePrimary(ILangParser.ModifiablePrimaryContext ctx) {
+    public Type analyzeModifiablePrimary(IlangCodeGenerationParser.ModifiablePrimaryContext ctx) {
         if (ctx.Identifier() == null) {
             return null;
         }
@@ -121,7 +133,7 @@ public class TypeAnalysis {
         return analyzeSimpleVariable(ctx);
     }
 
-    public Type analyzeRecordOrArray(ILangParser.ModifiablePrimaryContext ctx){
+    public Type analyzeRecordOrArray(IlangCodeGenerationParser.ModifiablePrimaryContext ctx){
 
         List<String> identifiers = new ArrayList<>();
 
@@ -133,8 +145,8 @@ public class TypeAnalysis {
                 continue;
             }
 
-            if (ctx.getChild(i) instanceof ILangParser.ExpressionContext) {
-                if (analyzeExpression((ILangParser.ExpressionContext) ctx.getChild(i)) != Type.INT) {
+            if (ctx.getChild(i) instanceof IlangCodeGenerationParser.ExpressionContext) {
+                if (analyzeExpression((IlangCodeGenerationParser.ExpressionContext) ctx.getChild(i)) != Type.INT) {
                     HelperStore.throwException(ctx.getStart().getLine(), "Index of ARRAY TYPE must be of INT TYPE");
                 }
                 identifiers.add("0");
@@ -192,7 +204,7 @@ public class TypeAnalysis {
         return finishedType;
     }
 
-    public Type analyzeSimpleVariable(ILangParser.ModifiablePrimaryContext ctx){
+    public Type analyzeSimpleVariable(IlangCodeGenerationParser.ModifiablePrimaryContext ctx){
         String modifiablePrimaryName = ctx.Identifier(0).getText();
 
         if (HelperStore.isVariableInRoutineScope(modifiablePrimaryName)){

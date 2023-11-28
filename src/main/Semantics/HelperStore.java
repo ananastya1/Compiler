@@ -4,6 +4,7 @@ import java.util.List;
 
 public class HelperStore {
     static String scope = null; // Null - global; "someText" routine someText()...
+    static boolean return_exists = false;
     static boolean isRecordScope = false;
     static boolean isParameterScope = false;
 

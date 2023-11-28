@@ -4,16 +4,16 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 
-import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Scanner;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class SemanticsTest {
+public class CodeGenTest {
     public static void main(String[] args) throws Exception{
 
         String content = readFile("src/sample.script");
@@ -42,47 +42,72 @@ public class SemanticsTest {
 
 
         for (String key:keys) {
-            System.out.println("key " +key+"\nvalue "+Listener.expressions.get(key));
-            //while 1 <= 10 loop
+
             String output = key.replaceAll("([\\\\+\\\\*])", " \\\\$1 ");
             output = output.replaceAll("([-/%])", " $1 ");
-            output = output.replaceAll("(and|or|xor|&&|<=|>|<|>=)", " $1 ");
-            System.out.println("added spasing "+output);
+            output = output.replaceAll("(and|or|xor|&&)", " $1 ");
             String [] outarr = output.split("\\s");
             StringBuilder newString = new StringBuilder();
             for (String i : outarr){
                 newString.append("\\s*").append(i);
             }
-            System.out.println("concat after split "+newString);
             newString.append("\\s*");
             String s ="("+newString+")";
-            //System.out.println(newString);
             //System.out.println(s);
             String sWithEndLine = "("+newString+"\n)";
             Pattern pattern = Pattern.compile(sWithEndLine);
             Matcher matcher = pattern.matcher(optimizedContent);
             if (matcher.find()){
-                optimizedContent =  matcher.replaceAll(" " + Listener.expressions.get(key)+"\n");
-                System.out.println("that "+optimizedContent);
-            }
+                optimizedContent =  matcher.replaceAll(" " + Listener.expressions.get(key)+"\n");}
             else{
                 Pattern pattern2 = Pattern.compile(s);
                 Matcher matcher2 = pattern2.matcher(optimizedContent);
                 optimizedContent = matcher2.replaceAll(" " + Listener.expressions.get(key)+ " ");}
-                System.out.println("this "+optimizedContent);
         }
 
-        System.out.println(optimizedContent);
+
 
         ParseTree treeOptimized = treeCreate(optimizedContent);
         System.out.println(treeOptimized.toStringTree());
 
-
+//        System.out.println(optimizedContent);
 
         Visitor visitorOptimized = new Visitor();
 
         ASTNode nodeOptimized = visitorOptimized.visit(treeOptimized);
         System.out.println("AST created");
+
+        // TODO не забыть вернуть optimized
+        ParseTree treeForJusmin = treeCreateCodeGeneration(optimizedContent);
+        JusminCodeGeneration jusminVisitor = new JusminCodeGeneration();
+        String jusminContent = jusminVisitor.visit(treeForJusmin);
+
+        System.out.println(jusminContent);
+
+        for (int i = 0; i < CodeGenHelper.records.size(); i++) {
+            String filePath = "src/JasminFiles/" + i + ".j";
+
+            try (FileWriter writer = new FileWriter(filePath)) {
+                // Записываем текст в файл
+                writer.write(CodeGenHelper.records.get(i));
+
+                System.out.println("Запись в файл успешно выполнена.");
+            } catch (IOException e) {
+                System.err.println("Ошибка при записи в файл: " + e.getMessage());
+            }
+        }
+
+
+        String filePath = "src/JasminFiles/Main.j";
+
+        try (FileWriter writer = new FileWriter(filePath)) {
+            // Записываем текст в файл
+            writer.write(jusminContent);
+
+            System.out.println("Запись в файл успешно выполнена.");
+        } catch (IOException e) {
+            System.err.println("Ошибка при записи в файл: " + e.getMessage());
+        }
 
     }
 
@@ -102,4 +127,14 @@ public class SemanticsTest {
         return tree;
     }
 
+    private static ParseTree treeCreateCodeGeneration(String content) throws IOException {
+        CharStream input = CharStreams.fromString(content);
+        IlangCodeGenerationLexer lexer = new IlangCodeGenerationLexer(input);
+        CommonTokenStream tokens = new CommonTokenStream(lexer);
+        IlangCodeGenerationParser parser = new IlangCodeGenerationParser(tokens);
+        parser.removeErrorListeners();
+        parser.addErrorListener(new ErrorListener());
+        ParseTree tree = parser.main();
+        return tree;
+    }
 }

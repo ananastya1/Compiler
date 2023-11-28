@@ -7,7 +7,7 @@ public class RoutineDeclarationNode extends ASTNode {
     private IdentifierNode procedureName;
 //    private ParametersNode parameters;
     private TypeNode returnType;
-    private HashMap<String, TypeClass> variables = new HashMap<>();
+    public HashMap<String, TypeClass> variables = new HashMap<>();
     private List<ParameterDeclarationNode> parameters = new ArrayList<>();
     private BodyNode body;
 
