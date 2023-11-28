@@ -19,12 +19,16 @@ public class Listener extends ILangBaseListener{
 
             String splitted = ctx.getText().split(">|<|>=|<=|\\+|-|xor|or|and|\\*|=|/|/=")[0];
             try{
-                if ((Float.parseFloat(splitted)) ==
-                        (Float.parseFloat(String.valueOf(Integer.parseInt(splitted))))){
+                if(splitted.equals(String.valueOf(Integer.parseInt(splitted)))){
+//                if ((Float.parseFloat(splitted)) ==
+//                        (Float.parseFloat(String.valueOf(Integer.parseInt(splitted))))){
                     optimized = String.valueOf((int)(Float.parseFloat(optimized)));
                 }
             }
             catch (Exception ignored){
+                if(Float.parseFloat(optimized)==Float.parseFloat(splitted)){
+                    optimized = splitted;
+                }
 //                System.out.println(ignored);
             }
             if (!ctx.getText().equals(optimized)){

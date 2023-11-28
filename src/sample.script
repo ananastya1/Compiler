@@ -1,11 +1,17 @@
-routine max(a: real, b: real) : real is
-    if a > b then
-        return a;
-    else
-        return b;
-    end;
+type Coordinates is record
+    var latitude: real;
+    var longitude: real;
 end
-var x: real is 10.50;
-var y: real is 15.23;
-var max_value: real is max(x, y);
-write(max_value);
+type Address is record
+    var location: Coordinates;
+end
+var home_address: Address;
+home_address.location.latitude := 35.0000;
+home_address.location.longitude := -95.0000;
+
+//to test
+writeln(home_address.location.latitude) // shoud output 35.0 (logically)
+
+home_address.location.longitude := 56.32;
+writeln(home_address.location.longitude) //56.32?
+

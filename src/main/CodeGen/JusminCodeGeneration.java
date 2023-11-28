@@ -533,20 +533,35 @@ public class JusminCodeGeneration extends IlangCodeGenerationBaseVisitor<String>
     public String visitAssignment(IlangCodeGenerationParser.AssignmentContext ctx) {
        StringBuilder assignmentCode = new StringBuilder();
 
-       String[] modifiablePrimary = visit(ctx.modifiablePrimary()).split("!");
+        String expression = visit(ctx.expression());
 
-       String expression = visit(ctx.expression());
+       String modifiablePrimary = visit(ctx.modifiablePrimary());
+       if (modifiablePrimary.contains("!")){
+           String[] modifiablePrimarySplitted = modifiablePrimary.split("!");
 
-       assignmentCode.append(expression).append("\n");
+           assignmentCode.append(expression).append("\n");
 
-        if (CodeGenHelper.scope != null && parseInteger(modifiablePrimary[1]) != null){
-            assignmentCode.append(modifiablePrimary[0]).append("store ").append(modifiablePrimary[1]).append("\n");
-            return assignmentCode.toString();
-        }
+           if (CodeGenHelper.scope != null && parseInteger(modifiablePrimarySplitted[1]) != null){
+               assignmentCode.append(modifiablePrimarySplitted[0]).append("store ").append(modifiablePrimarySplitted[1]).append("\n");
+               return assignmentCode.toString();
+           }
 
-        assignmentCode.append("putstatic " + CodeGenHelper.mainClassName + "/").append(modifiablePrimary[1]).append(" ").append(modifiablePrimary[0]).append("\n");
+           assignmentCode.append("putstatic " + CodeGenHelper.mainClassName + "/").append(modifiablePrimarySplitted[1]).append(" ").append(modifiablePrimarySplitted[0]).append("\n");
 
-       return assignmentCode.toString();
+           return assignmentCode.toString();
+       }else{
+           String[] modifiablePrimarySplitted = modifiablePrimary.split("\n");
+
+           for (int i = 0; i < modifiablePrimarySplitted.length - 1; i++) {
+               assignmentCode.append(modifiablePrimarySplitted[i]).append("\n");
+           }
+           assignmentCode.append(expression).append("\n");
+
+           assignmentCode.append("putfield ").append(modifiablePrimarySplitted[modifiablePrimarySplitted.length - 1]).append("\n");
+
+           return assignmentCode.toString();
+       }
+
     }
 
     /**
@@ -1116,42 +1131,58 @@ public class JusminCodeGeneration extends IlangCodeGenerationBaseVisitor<String>
      */
     @Override
     public String visitPrimary(IlangCodeGenerationParser.PrimaryContext ctx) {
-        String primaryCode = "";
+        StringBuilder primaryCode = new StringBuilder();
 
         if (ctx.IntegerLiteral() != null){
-            primaryCode += "ldc " + ctx.IntegerLiteral().getText() + "\n";
+            primaryCode.append("ldc ").append(ctx.IntegerLiteral().getText()).append("\n");
             if (ctx.sign() != null && Objects.equals(ctx.sign().getText(), "-")){
-                primaryCode += "ineg\n";
+                primaryCode.append("ineg\n");
             }
 
-            return primaryCode;
+            return primaryCode.toString();
         }else if (ctx.RealLiteral() != null){
-            primaryCode += "ldc " + ctx.RealLiteral().getText() + "\n";
+            primaryCode.append("ldc ").append(ctx.RealLiteral().getText()).append("\n");
             if (ctx.sign() != null && Objects.equals(ctx.sign().getText(), "-")){
-                primaryCode += "ineg\n";
+                primaryCode.append("fneg\n");
             }
-            return primaryCode;
+            return primaryCode.toString();
         }else if (ctx.TRUE() != null){
-            primaryCode += "ldc 1\n";
-            return primaryCode;
+            primaryCode.append("ldc 1\n");
+            return primaryCode.toString();
         }else if (ctx.FALSE() != null){
-            primaryCode += "ldc 0\n";
-            return primaryCode;
+            primaryCode.append("ldc 0\n");
+            return primaryCode.toString();
         }else if (ctx.modifiablePrimary() != null){
-            String[] modifiablePrimarySplitted = visit(ctx.modifiablePrimary()).split("!");
+            String modifiablePrimary = visit(ctx.modifiablePrimary());
+            if (modifiablePrimary.contains("!")){
+                String[] modifiablePrimarySplitted = modifiablePrimary.split("!");
 
-            if (CodeGenHelper.scope != null && parseInteger(modifiablePrimarySplitted[1]) != null){
-                primaryCode += modifiablePrimarySplitted[0] + "load " + modifiablePrimarySplitted[1] + "\n";
-                return primaryCode;
+                if (CodeGenHelper.scope != null && parseInteger(modifiablePrimarySplitted[1]) != null){
+                    primaryCode.append(modifiablePrimarySplitted[0]).append("load ").append(modifiablePrimarySplitted[1]).append("\n");
+                    return primaryCode.toString();
+                }
+
+                if (parseInteger(modifiablePrimarySplitted[1]) != null){
+                    primaryCode.append(modifiablePrimarySplitted[0]).append("load ").append(modifiablePrimarySplitted[1]).append("\n");
+                    return primaryCode.toString();
+                }
+
+                primaryCode.append("getstatic " + CodeGenHelper.mainClassName + "/").append(modifiablePrimarySplitted[1]).append(" ").append(modifiablePrimarySplitted[0]).append("\n");
+                return primaryCode.toString();
+            }else{
+                String[] modifiablePrimarySplitted = modifiablePrimary.split("\n");
+
+                for (int i = 0; i < modifiablePrimarySplitted.length - 1; i++) {
+                    primaryCode.append(modifiablePrimarySplitted[i]).append("\n");
+                }
+
+                primaryCode.append("getfield ").append(modifiablePrimarySplitted[modifiablePrimarySplitted.length - 1]).append("\n");
+
+
+                return primaryCode.toString();
             }
 
-            if (parseInteger(modifiablePrimarySplitted[1]) != null){
-                primaryCode += modifiablePrimarySplitted[0] + "load " + modifiablePrimarySplitted[1] + "\n";
-                return primaryCode;
-            }
 
-            primaryCode += "getstatic " + CodeGenHelper.mainClassName + "/" + modifiablePrimarySplitted[1] + " " + modifiablePrimarySplitted[0] + "\n";
-            return primaryCode;
 
         }else if(ctx.routineCall() != null){
             return visit(ctx.routineCall());
@@ -1199,8 +1230,50 @@ public class JusminCodeGeneration extends IlangCodeGenerationBaseVisitor<String>
             return modifiablePrimaryCode.toString();
 
         }
+        else{
 
-        return super.visitModifiablePrimary(ctx);
+            String prevChild = null;
+
+            for (int i = 0; i < ctx.getChildCount(); i++) {
+                if (ctx.getChild(i).getText().equals(".") || ctx.getChild(i).getText().equals("]") ||ctx.getChild(i).getText().equals("[") ){
+                    continue;
+                }
+
+                if (ctx.getChild(i) instanceof IlangCodeGenerationParser.ExpressionContext){
+
+                }else{
+
+                    if (CodeGenHelper.scope != null){
+
+                    }else{
+                        if (prevChild == null){
+                            modifiablePrimaryCode.append("getstatic ").append(CodeGenHelper.mainClassName).append("/").append(ctx.getChild(i).getText()).append(" L").append(CodeGenHelper.globalVarTypes.get(ctx.getChild(i).getText())).append(";\n");
+                            prevChild = CodeGenHelper.globalVarTypes.get(ctx.getChild(i).getText());
+                        }else{
+                            boolean isL = switch (CodeGenHelper.recordNodes.get(prevChild).varsType.get(ctx.getChild(i).getText())) {
+                                case "I", "Z", "F" -> false;
+                                default -> true;
+                            };
+
+                            if (i == ctx.getChildCount() - 1){
+                                modifiablePrimaryCode.append(prevChild).append("/").append(ctx.getChild(i).getText()).append(isL ? " L" : " ").append(CodeGenHelper.recordNodes.get(prevChild).varsType.get(ctx.getChild(i).getText())).append(isL ? ";" : "").append("\n");
+                            }else{
+                                modifiablePrimaryCode.append("getfield ").append(prevChild).append("/").append(ctx.getChild(i).getText()).append(isL ? " L" : " ").append(CodeGenHelper.recordNodes.get(prevChild).varsType.get(ctx.getChild(i).getText())).append(isL ? ";" : "").append("\n");
+                            }
+
+                            prevChild = CodeGenHelper.recordNodes.get(prevChild).varsType.get(ctx.getChild(i).getText());
+                        }
+                    }
+
+                }
+
+            }
+
+
+
+            return modifiablePrimaryCode.toString();
+        }
+
     }
 
     /**
