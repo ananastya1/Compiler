@@ -1,17 +1,21 @@
-type Coordinates is record
-    var latitude: real;
-    var longitude: real;
+type Triangle is record
+    var side1: real;
+    var side2: real;
+    var side3: real;
 end
-type Address is record
-    var location: Coordinates;
+
+routine is_right_triangle(t: Triangle) is
+    var a: real is t.side1;
+    var b: real is t.side2;
+    var c: real is t.side3;
+    if a*a + b*b = c*c then
+        write(true);
+    else
+        write(false);
+    end;
 end
-var home_address: Address;
-home_address.location.latitude := 35.0000;
-home_address.location.longitude := -95.0000;
-
-//to test
-writeln(home_address.location.latitude) // shoud output 35.0 (logically)
-
-home_address.location.longitude := 56.32;
-writeln(home_address.location.longitude) //56.32?
-
+var my_triangle: Triangle;
+my_triangle.side1 := 3.0;
+my_triangle.side2 := 4.0;
+my_triangle.side3 := 5.0;
+is_right_triangle(my_triangle);

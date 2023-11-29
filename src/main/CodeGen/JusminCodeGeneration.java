@@ -105,7 +105,7 @@ public class JusminCodeGeneration extends IlangCodeGenerationBaseVisitor<String>
 //            System.out.println("123");
 //        }
         StringBuilder newVariable = new StringBuilder();
-
+        // TODO recordScope in routine (мб не делаем)
         if (CodeGenHelper.recordScope != null){
             RecordJasminNode recordNode = CodeGenHelper.recordNodes.get(CodeGenHelper.recordScope);
 
@@ -270,9 +270,18 @@ public class JusminCodeGeneration extends IlangCodeGenerationBaseVisitor<String>
 
             CodeGenHelper.recordScope = ctx.Identifier().getText();
             RecordJasminNode newRecordNode = new RecordJasminNode(ctx.Identifier().getText());
-            CodeGenHelper.recordNodes.put(ctx.Identifier().getText(),newRecordNode);
-            recordCode.append(visit(ctx.type())).append("\n");
 
+//            if (CodeGenHelper.scope != null){
+//                RoutineJasminNode routine = CodeGenHelper.routineNodes.get(CodeGenHelper.scope);
+//                routine.recordNodes.put(ctx.Identifier().getText(),newRecordNode);
+//
+//                RecordJasminNode nodeAfterFilling = routine.recordNodes.get(ctx.Identifier().getText());
+//
+//            }
+
+            CodeGenHelper.recordNodes.put(ctx.Identifier().getText(),newRecordNode);
+
+            recordCode.append(visit(ctx.type())).append("\n");
             RecordJasminNode nodeAfterFilling = CodeGenHelper.recordNodes.get(ctx.Identifier().getText());
 
             recordCode.append(".method public <init>()V\n");
@@ -771,7 +780,7 @@ public class JusminCodeGeneration extends IlangCodeGenerationBaseVisitor<String>
         }
         StringBuilder parameterTypes = new StringBuilder();
         for (String s : parameters) {
-            parameterTypes.append(s.split("@")[1]);
+            parameterTypes.append(CodeGenHelper.paramType(s.split("@")[1]));
         }
         rotuineCode.append(parameterTypes);
         rotuineCode.append(")");
@@ -799,7 +808,7 @@ public class JusminCodeGeneration extends IlangCodeGenerationBaseVisitor<String>
         rotuineCode.append("\t.limit locals 100\n\n");
 
         for (int i = 0; i < parameters.size(); i++) {
-            rotuineCode.append(".var ").append(i).append(" is ").append(parameters.get(i).split("@")[0]).append(" ").append(parameters.get(i).split("@")[1]).append("\n");
+            rotuineCode.append(".var ").append(i).append(" is ").append(parameters.get(i).split("@")[0]).append(" ").append(CodeGenHelper.paramType(parameters.get(i).split("@")[1])).append("\n");
         }
 
         rotuineCode.append(visit(ctx.body()));
@@ -962,27 +971,31 @@ public class JusminCodeGeneration extends IlangCodeGenerationBaseVisitor<String>
 
         if (ctx.simple(1) != null){
             ComparisonOperator operator = determineComparisonOperator(ctx);
+            Type type = CodeGenHelper.typeAnalyse.analyzeSimple(ctx.simple(1));
             String nextSimple = visit(ctx.simple(1));
             RelationCode.append(nextSimple);
+            if(type.equals(Type.REAL)){
+                RelationCode.append("fcmpl\n");
+            }
             switch (operator){
 
                 case LT -> {
-                    RelationCode.append("if_icmpge ").append("TrueBranch").append(ctx.getStart().getStartIndex()).append("\n");
+                    RelationCode.append(type.equals(Type.REAL)? "ifge ":"if_icmpge ").append("TrueBranch").append(ctx.getStart().getStartIndex()).append("\n");
                 }
                 case LEQ -> {
-                    RelationCode.append("if_icmpgt ").append("TrueBranch").append(ctx.getStart().getStartIndex()).append("\n");
+                    RelationCode.append(type.equals(Type.REAL)? "ifgt ":"if_icmpgt ").append("TrueBranch").append(ctx.getStart().getStartIndex()).append("\n");
                 }
                 case GT -> {
-                    RelationCode.append("if_icmple ").append("TrueBranch").append(ctx.getStart().getStartIndex()).append("\n");
+                    RelationCode.append(type.equals(Type.REAL)? "ifle ":"if_icmple ").append("TrueBranch").append(ctx.getStart().getStartIndex()).append("\n");
                 }
                 case GEQ -> {
-                    RelationCode.append("if_icmplt ").append("TrueBranch").append(ctx.getStart().getStartIndex()).append("\n");
+                    RelationCode.append(type.equals(Type.REAL)? "iflt ":"if_icmplt ").append("TrueBranch").append(ctx.getStart().getStartIndex()).append("\n");
                 }
                 case EQ -> {
-                    RelationCode.append("if_icmpne ").append("TrueBranch").append(ctx.getStart().getStartIndex()).append("\n");
+                    RelationCode.append(type.equals(Type.REAL)? "ifne ":"if_icmpne ").append("TrueBranch").append(ctx.getStart().getStartIndex()).append("\n");
                 }
                 case NEQ -> {
-                    RelationCode.append("if_icmpeq ").append("TrueBranch").append(ctx.getStart().getStartIndex()).append("\n");
+                    RelationCode.append(type.equals(Type.REAL)? "ifeq ":"if_icmpeq ").append("TrueBranch").append(ctx.getStart().getStartIndex()).append("\n");
                 }
             }
             String falseBranch = "ldc 1\ngoto EndComparison"+ctx.getStart().getStartIndex()+"\n";
@@ -1167,7 +1180,7 @@ public class JusminCodeGeneration extends IlangCodeGenerationBaseVisitor<String>
                     return primaryCode.toString();
                 }
 
-                primaryCode.append("getstatic " + CodeGenHelper.mainClassName + "/").append(modifiablePrimarySplitted[1]).append(" ").append(modifiablePrimarySplitted[0]).append("\n");
+                primaryCode.append("getstatic " + CodeGenHelper.mainClassName + "/").append(modifiablePrimarySplitted[1]).append(" ").append(CodeGenHelper.paramType(modifiablePrimarySplitted[0])).append("\n");
                 return primaryCode.toString();
             }else{
                 String[] modifiablePrimarySplitted = modifiablePrimary.split("\n");
@@ -1243,8 +1256,39 @@ public class JusminCodeGeneration extends IlangCodeGenerationBaseVisitor<String>
 
                 }else{
 
-                    if (CodeGenHelper.scope != null){
-
+                    if (CodeGenHelper.scope != null){ //TODO invoke records within the routine
+                        RoutineJasminNode routine = CodeGenHelper.routineNodes.get(CodeGenHelper.scope);
+                        if (prevChild==null){
+                            modifiablePrimaryCode.append("aload ").append(routine.localVariable.get(ctx.getChild(i).getText()) - 1).append("\n");
+                            prevChild = routine.varTypes.get(ctx.getChild(i).getText());
+                        }
+                        else{
+//                            if(routine.recordNodes.get(prevChild)!=null){
+//                                boolean isL = switch (routine.recordNodes.get(prevChild).varsType.get(ctx.getChild(i).getText())){
+//                                    case "I", "Z", "F" -> false;
+//                                    default -> true;
+//                                };
+//                                if (i==ctx.getChildCount()-1){
+//                                    modifiablePrimaryCode.append(prevChild).append("/").append(ctx.getChild(i).getText()).append(isL ? " L" : " ").append(routine.recordNodes.get(prevChild).varsType.get(ctx.getChild(i).getText())).append(isL ? ";" : "").append("\n");
+//                                }
+//                                else {
+//                                    modifiablePrimaryCode.append("getfield ").append(prevChild).append("/").append(ctx.getChild(i).getText()).append(isL ? " L" : " ").append(routine.recordNodes.get(prevChild).varsType.get(ctx.getChild(i).getText())).append(isL ? ";" : "").append("\n");
+//                                }
+//                                prevChild = routine.recordNodes.get(prevChild).varsType.get(ctx.getChild(i).getText());}
+//                            else{
+                                boolean isL = switch (CodeGenHelper.recordNodes.get(prevChild).varsType.get(ctx.getChild(i).getText())){
+                                    case "I", "Z", "F" -> false;
+                                    default -> true;
+                                };
+                                if (i==ctx.getChildCount()-1){
+                                    modifiablePrimaryCode.append(prevChild).append("/").append(ctx.getChild(i).getText()).append(isL ? " L" : " ").append(CodeGenHelper.recordNodes.get(prevChild).varsType.get(ctx.getChild(i).getText())).append(isL ? ";" : "").append("\n");
+                                }
+                                else {
+                                    modifiablePrimaryCode.append("getfield ").append(prevChild).append("/").append(ctx.getChild(i).getText()).append(isL ? " L" : " ").append(CodeGenHelper.recordNodes.get(prevChild).varsType.get(ctx.getChild(i).getText())).append(isL ? ";" : "").append("\n");
+                                }
+                                prevChild = CodeGenHelper.recordNodes.get(prevChild).varsType.get(ctx.getChild(i).getText());
+//                            }
+                        }
                     }else{
                         if (prevChild == null){
                             modifiablePrimaryCode.append("getstatic ").append(CodeGenHelper.mainClassName).append("/").append(ctx.getChild(i).getText()).append(" L").append(CodeGenHelper.globalVarTypes.get(ctx.getChild(i).getText())).append(";\n");

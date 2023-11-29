@@ -48,4 +48,11 @@ public class CodeGenHelper {
 
         return resultCode.toString();
     }
+    static String paramType(String type){
+        if (type.equals("Z") || type.equals("I") ||type.equals("F")){
+            return type;}
+        else{
+            return (new String("L"+type+";"));
+        }
+    }
 }
