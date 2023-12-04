@@ -1,5 +1,6 @@
 import org.antlr.v4.runtime.tree.ParseTree;
 
+import java.lang.reflect.Array;
 import java.util.*;
 
 public class Visitor extends ILangBaseVisitor<ASTNode> {
@@ -651,6 +652,12 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
 
         if (parameterType.type.getType() == Type.RECORD){
             parameterType.type.setName(ctx.type().getText());
+        }
+        if (parameterType.type.getType() == Type.ARRAY){
+            parameterType.type.setType(((ArrayTypeNode) parameterType).getElementType().type.getType());
+            ArrayType arr = new ArrayType(parameterName.getIdentifier(), new TypeClass(parameterType.type.getType()), 0);
+            HelperStore.arrays.put(parameterName.getIdentifier(), arr);
+            parameterType.type.setType(Type.ARRAY);
         }
 
         return new ParameterDeclarationNode(parameterName, parameterType, ctx.getStart().getLine());

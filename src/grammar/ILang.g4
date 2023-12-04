@@ -97,7 +97,7 @@ statement: assignment
 
 assignment: modifiablePrimary ASSIGN expression;
 
-routineCall : builtInRoutines | Identifier ( LPAREN expression (COMMA expression)* RPAREN )?;
+routineCall : builtInRoutines | Identifier LPAREN ( expression (COMMA expression)* )? RPAREN;
 
 builtInRoutines : writeStatement
                 | inputStatement

@@ -9,9 +9,9 @@ routine is_right_triangle(t: Triangle) is
     var b: real is t.side2;
     var c: real is t.side3;
     if a*a + b*b = c*c then
-        write(true);
+        writeln(true);
     else
-        write(false);
+        writeln(false);
     end;
 end
 var my_triangle: Triangle;

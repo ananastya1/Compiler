@@ -408,10 +408,6 @@ public class JusminCodeGeneration extends IlangCodeGenerationBaseVisitor<String>
         boolean isRecordArray = false;
         List<Integer> sizes = new ArrayList<>();
 
-        if (ctx.expression() == null){
-            return "";
-        }
-
         String arrayType = visit(ctx.type());
         String arrayNewType = "";
         String nodeType = "";
@@ -464,6 +460,10 @@ public class JusminCodeGeneration extends IlangCodeGenerationBaseVisitor<String>
             }
         }
 
+        if (ctx.expression() == null){
+            return "[".repeat(dimension) + arrayType;
+        }
+
         arrayCode.append(visit(ctx.expression()));
         if (dimension == 1){
             if (isRecordArray){
@@ -487,6 +487,7 @@ public class JusminCodeGeneration extends IlangCodeGenerationBaseVisitor<String>
             sizes.add(Integer.parseInt(ctx.expression().getText()));
             arrayNode.sizes = sizes;
             CodeGenHelper.arrays.put(CodeGenHelper.arrayTemp, arrayNode);
+            CodeGenHelper.routineNodes.get(CodeGenHelper.scope).varTypes.put(CodeGenHelper.arrayTemp, "[".repeat(dimension) + nodeType);
         }else{
             ArrayJasminNode arrayNode = CodeGenHelper.arrays.get(CodeGenHelper.arrayTemp);
             arrayNode.dimension = dimension;
@@ -560,6 +561,25 @@ public class JusminCodeGeneration extends IlangCodeGenerationBaseVisitor<String>
            return assignmentCode.toString();
        }else{
            String[] modifiablePrimarySplitted = modifiablePrimary.split("\n");
+
+           if (CodeGenHelper.arrays.get(ctx.modifiablePrimary().getChild(0).getText()) != null){
+               for (String s : modifiablePrimarySplitted) {
+                   assignmentCode.append(s).append("\n");
+               }
+
+               ArrayJasminNode arr = CodeGenHelper.arrays.get(ctx.modifiablePrimary().getChild(0).getText());
+               String storeType = switch (arr.type) {
+                   case "I" -> "i";
+                   case "F" -> "f";
+                   case "Z" -> "z";
+                   default -> "";
+               };
+               assignmentCode.append(expression).append("\n");
+               assignmentCode.append(storeType).append("astore\n");
+
+               return assignmentCode.toString();
+           }
+
 
            for (int i = 0; i < modifiablePrimarySplitted.length - 1; i++) {
                assignmentCode.append(modifiablePrimarySplitted[i]).append("\n");
@@ -665,11 +685,12 @@ public class JusminCodeGeneration extends IlangCodeGenerationBaseVisitor<String>
             routine.numOfLocalVariables += 1;
             loopVar = routine.numOfLocalVariables;
             routine.localVariable.put(ctx.Identifier().getText(), routine.numOfLocalVariables);
+            routine.varTypes.put(ctx.Identifier().getText(), "I");
             forLoopCode.append(".var ").append(routine.numOfLocalVariables - 1).append(" is ").append(ctx.Identifier().getText()).append(" I\n");
 
             forLoopCode.append(rangeCodeSplitted[ctx.REVERSE() != null ? 1 : 0]).append("\n");
 
-            forLoopCode.append("istore_").append(routine.numOfLocalVariables - 1).append("\n");
+            forLoopCode.append("istore ").append(routine.numOfLocalVariables - 1).append("\n");
         }else{
             CodeGenHelper.mainNumOfLocalVariables += 1;
             loopVar = CodeGenHelper.mainNumOfLocalVariables;
@@ -678,11 +699,11 @@ public class JusminCodeGeneration extends IlangCodeGenerationBaseVisitor<String>
 
             forLoopCode.append(rangeCodeSplitted[ctx.REVERSE() != null ? 1 : 0]).append("\n");
 
-            forLoopCode.append("istore_").append(CodeGenHelper.mainNumOfLocalVariables - 1).append("\n");
+            forLoopCode.append("istore ").append(CodeGenHelper.mainNumOfLocalVariables - 1).append("\n");
         }
 
         forLoopCode.append("ForLoopStart").append(ctx.getStart().getStartIndex()).append(":").append("\n");
-        forLoopCode.append("iload_").append(loopVar - 1).append("\n");
+        forLoopCode.append("iload ").append(loopVar - 1).append("\n");
         forLoopCode.append(rangeCodeSplitted[ctx.REVERSE() != null ? 0 : 1]).append("\n");
 
         if (ctx.REVERSE() != null){
@@ -798,7 +819,15 @@ public class JusminCodeGeneration extends IlangCodeGenerationBaseVisitor<String>
         for (String parameter : parameters) {
             newRoutine.numOfLocalVariables += 1;
             newRoutine.localVariable.put(parameter.split("@")[0], newRoutine.numOfLocalVariables);
-            newRoutine.varTypes.put(parameter.split("@")[0],parameter.split("@")[1]);
+
+            if (parameter.split("@")[1].contains("[")){
+                int dimension = parameter.split("@")[1].length() - parameter.split("@")[1].replaceAll("\\[", "").length();
+                String type = parameter.split("@")[1].replaceAll("\\[", "");
+                CodeGenHelper.arrays.put(parameter.split("@")[0], new ArrayJasminNode(parameter.split("@")[0],dimension, type) );
+                newRoutine.arrays.put(parameter.split("@")[0], new ArrayJasminNode(parameter.split("@")[0],dimension, type) );
+            }else{
+                newRoutine.varTypes.put(parameter.split("@")[0],parameter.split("@")[1]);
+            }
         }
 
         CodeGenHelper.routineNodes.put(routineName, newRoutine);
@@ -1183,7 +1212,28 @@ public class JusminCodeGeneration extends IlangCodeGenerationBaseVisitor<String>
                 primaryCode.append("getstatic " + CodeGenHelper.mainClassName + "/").append(modifiablePrimarySplitted[1]).append(" ").append(CodeGenHelper.paramType(modifiablePrimarySplitted[0])).append("\n");
                 return primaryCode.toString();
             }else{
+
                 String[] modifiablePrimarySplitted = modifiablePrimary.split("\n");
+
+                if (CodeGenHelper.arrays.get(ctx.modifiablePrimary().getChild(0).getText()) != null){
+                    for (String s : modifiablePrimarySplitted) {
+                        primaryCode.append(s).append("\n");
+                    }
+                    if (modifiablePrimarySplitted[modifiablePrimarySplitted.length - 1].equals("arraylength")){
+                        return primaryCode.toString();
+                    }
+
+                    ArrayJasminNode arr = CodeGenHelper.arrays.get(ctx.modifiablePrimary().getChild(0).getText());
+                    String storeType = switch (arr.type) {
+                        case "I" -> "i";
+                        case "F" -> "f";
+                        case "Z" -> "z";
+                        default -> "";
+                    };
+                    primaryCode.append(storeType).append("aload\n");
+
+                    return primaryCode.toString();
+                }
 
                 for (int i = 0; i < modifiablePrimarySplitted.length - 1; i++) {
                     primaryCode.append(modifiablePrimarySplitted[i]).append("\n");
@@ -1233,6 +1283,11 @@ public class JusminCodeGeneration extends IlangCodeGenerationBaseVisitor<String>
 
             }
 
+            if (CodeGenHelper.arrays.get(ctx.Identifier(0).getText()) != null){
+                modifiablePrimaryCode.append("[".repeat(CodeGenHelper.arrays.get(ctx.Identifier(0).getText()).dimension)).append(CodeGenHelper.arrays.get(ctx.Identifier(0).getText()).type).append("!").append(ctx.Identifier(0).getText());
+                return modifiablePrimaryCode.toString();
+            }
+
             if (CodeGenHelper.mainLocalVariable.get(ctx.Identifier(0).getText()) != null){
                 modifiablePrimaryCode.append("i").append("!").append(CodeGenHelper.mainLocalVariable.get(ctx.Identifier(0).getText()) - 1);
                 return modifiablePrimaryCode.toString();
@@ -1244,7 +1299,6 @@ public class JusminCodeGeneration extends IlangCodeGenerationBaseVisitor<String>
 
         }
         else{
-
             String prevChild = null;
 
             for (int i = 0; i < ctx.getChildCount(); i++) {
@@ -1253,9 +1307,13 @@ public class JusminCodeGeneration extends IlangCodeGenerationBaseVisitor<String>
                 }
 
                 if (ctx.getChild(i) instanceof IlangCodeGenerationParser.ExpressionContext){
+                    modifiablePrimaryCode.append(visit(ctx.getChild(i)));
+                    modifiablePrimaryCode.append("ldc 1\nisub\n");
+                    if (i != ctx.getChildCount() - 2){
+                        modifiablePrimaryCode.append("aaload\n");
+                    }
 
                 }else{
-
                     if (CodeGenHelper.scope != null){ //TODO invoke records within the routine
                         RoutineJasminNode routine = CodeGenHelper.routineNodes.get(CodeGenHelper.scope);
                         if (prevChild==null){
@@ -1263,19 +1321,10 @@ public class JusminCodeGeneration extends IlangCodeGenerationBaseVisitor<String>
                             prevChild = routine.varTypes.get(ctx.getChild(i).getText());
                         }
                         else{
-//                            if(routine.recordNodes.get(prevChild)!=null){
-//                                boolean isL = switch (routine.recordNodes.get(prevChild).varsType.get(ctx.getChild(i).getText())){
-//                                    case "I", "Z", "F" -> false;
-//                                    default -> true;
-//                                };
-//                                if (i==ctx.getChildCount()-1){
-//                                    modifiablePrimaryCode.append(prevChild).append("/").append(ctx.getChild(i).getText()).append(isL ? " L" : " ").append(routine.recordNodes.get(prevChild).varsType.get(ctx.getChild(i).getText())).append(isL ? ";" : "").append("\n");
-//                                }
-//                                else {
-//                                    modifiablePrimaryCode.append("getfield ").append(prevChild).append("/").append(ctx.getChild(i).getText()).append(isL ? " L" : " ").append(routine.recordNodes.get(prevChild).varsType.get(ctx.getChild(i).getText())).append(isL ? ";" : "").append("\n");
-//                                }
-//                                prevChild = routine.recordNodes.get(prevChild).varsType.get(ctx.getChild(i).getText());}
-//                            else{
+                            if (prevChild.contains("[") && ctx.getChild(i).getText().equals("size")){
+                                modifiablePrimaryCode.append("arraylength\n");
+                                continue;
+                            }
                                 boolean isL = switch (CodeGenHelper.recordNodes.get(prevChild).varsType.get(ctx.getChild(i).getText())){
                                     case "I", "Z", "F" -> false;
                                     default -> true;
@@ -1287,13 +1336,23 @@ public class JusminCodeGeneration extends IlangCodeGenerationBaseVisitor<String>
                                     modifiablePrimaryCode.append("getfield ").append(prevChild).append("/").append(ctx.getChild(i).getText()).append(isL ? " L" : " ").append(CodeGenHelper.recordNodes.get(prevChild).varsType.get(ctx.getChild(i).getText())).append(isL ? ";" : "").append("\n");
                                 }
                                 prevChild = CodeGenHelper.recordNodes.get(prevChild).varsType.get(ctx.getChild(i).getText());
-//                            }
                         }
                     }else{
+                        if (CodeGenHelper.arrays.get(ctx.getChild(i).getText()) != null){
+                            modifiablePrimaryCode.append("getstatic ").append(CodeGenHelper.mainClassName).append("/").append(ctx.getChild(i).getText()).append(" ").append("[".repeat(CodeGenHelper.arrays.get(ctx.getChild(i).getText()).dimension)).append(CodeGenHelper.arrays.get(ctx.getChild(i).getText()).type).append("\n");
+                            prevChild = ctx.getChild(i).getText();
+                            continue;
+                        }
+
                         if (prevChild == null){
                             modifiablePrimaryCode.append("getstatic ").append(CodeGenHelper.mainClassName).append("/").append(ctx.getChild(i).getText()).append(" L").append(CodeGenHelper.globalVarTypes.get(ctx.getChild(i).getText())).append(";\n");
                             prevChild = CodeGenHelper.globalVarTypes.get(ctx.getChild(i).getText());
                         }else{
+                            if (CodeGenHelper.arrays.get(prevChild) != null && ctx.getChild(i).getText().equals("size")){
+                                modifiablePrimaryCode.append("arraylength\n");
+                                continue;
+                            }
+
                             boolean isL = switch (CodeGenHelper.recordNodes.get(prevChild).varsType.get(ctx.getChild(i).getText())) {
                                 case "I", "Z", "F" -> false;
                                 default -> true;
@@ -1331,40 +1390,53 @@ public class JusminCodeGeneration extends IlangCodeGenerationBaseVisitor<String>
     @Override
     public String visitWriteStatement(IlangCodeGenerationParser.WriteStatementContext ctx) {
         StringBuilder writeCode = new StringBuilder();
-        String expressionCode = visit(ctx.expression());
+        boolean ifExpression = false;
+        String expressionCode = "";
         String expressionType = "I";
+        if (ctx.expression() != null){
+            expressionCode = visit(ctx.expression());
+            writeCode.append(expressionCode);
+            ifExpression = true;
 
-        writeCode.append(expressionCode);
+            switch (CodeGenHelper.typeAnalyse.analyzeExpression(ctx.expression())){
 
-        switch (CodeGenHelper.typeAnalyse.analyzeExpression(ctx.expression())){
+                case BOOLEAN -> {
+                    expressionType = "Z";
+                }
 
-            case BOOLEAN -> {
-                expressionType = "Z";
+                case REAL -> {
+                    expressionType = "F";
+                }
+
             }
-
-            case REAL -> {
-                expressionType = "F";
-            }
-
         }
 
         if (ctx.WRITE() != null) {
             writeCode.append("getstatic java/lang/System/out Ljava/io/PrintStream;\n");
-            writeCode.append("swap\n");
-            writeCode.append("invokevirtual java/io/PrintStream/print(").append(expressionType).append(")V\n");
+            if (ifExpression){
+                writeCode.append("swap\n");
+            }
+            writeCode.append("invokevirtual java/io/PrintStream/print(").append(ifExpression ? expressionType : "").append(")V\n");
         } else if (ctx.WRITES() != null) {
             writeCode.append("getstatic java/lang/System/out Ljava/io/PrintStream;\n");
-            writeCode.append("swap\n");
-            writeCode.append("invokevirtual java/io/PrintStream/print(").append(expressionType).append(")V\n");
+            if (ifExpression){
+                writeCode.append("swap\n");
+            }
+            writeCode.append("invokevirtual java/io/PrintStream/print(").append(ifExpression ? expressionType : "").append(")V\n");
 
             writeCode.append("ldc \" \"\n");
             writeCode.append("getstatic java/lang/System/out Ljava/io/PrintStream;\n");
-            writeCode.append("swap\n");
+            if (ifExpression){
+                writeCode.append("swap\n");
+            }
             writeCode.append("invokevirtual java/io/PrintStream/print(Ljava/lang/String;)V\n");
         } else {
             writeCode.append("getstatic java/lang/System/out Ljava/io/PrintStream;\n");
-            writeCode.append("swap\n");
-            writeCode.append("invokevirtual java/io/PrintStream/println(").append(expressionType).append(")V\n");
+            if (ifExpression){
+                writeCode.append("swap\n");
+            }
+
+            writeCode.append("invokevirtual java/io/PrintStream/println(").append(ifExpression ? expressionType : "").append(")V\n");
         }
 
         return writeCode.toString();

@@ -20,21 +20,17 @@ public class CodeGenTest {
 
         ParseTree tree = treeCreate(content);
 
-
-
-        System.out.println(tree.toStringTree());
+//        System.out.println(tree.toStringTree());
 
         Visitor visitor = new Visitor();
 
         ASTNode node = visitor.visit(tree);
-        System.out.println("AST created");
 
         HelperStore.clearVariables();
 
         Listener listener = new Listener();
 
         String optimizedContent = content;
-//        System.out.println(content+"\n\n");
         ParseTreeWalker walker = new ParseTreeWalker();
         walker.walk(listener, tree);
 
@@ -68,21 +64,21 @@ public class CodeGenTest {
 
 
         ParseTree treeOptimized = treeCreate(optimizedContent);
-        System.out.println(treeOptimized.toStringTree());
+//        System.out.println(treeOptimized.toStringTree());
 
 //        System.out.println(optimizedContent);
 
         Visitor visitorOptimized = new Visitor();
 
         ASTNode nodeOptimized = visitorOptimized.visit(treeOptimized);
-        System.out.println("AST created");
+//        System.out.println("AST created");
 
         // TODO не забыть вернуть optimized
         ParseTree treeForJusmin = treeCreateCodeGeneration(optimizedContent);
         JusminCodeGeneration jusminVisitor = new JusminCodeGeneration();
         String jusminContent = jusminVisitor.visit(treeForJusmin);
 
-        System.out.println(jusminContent);
+//        System.out.println(jusminContent);
 
         for (int i = 0; i < CodeGenHelper.records.size(); i++) {
             String filePath = "src/JasminFiles/" + i + ".j";
@@ -91,9 +87,9 @@ public class CodeGenTest {
                 // Записываем текст в файл
                 writer.write(CodeGenHelper.records.get(i));
 
-                System.out.println("Запись в файл успешно выполнена.");
+//                System.out.println("Запись в файл успешно выполнена.");
             } catch (IOException e) {
-                System.err.println("Ошибка при записи в файл: " + e.getMessage());
+//                System.err.println("Ошибка при записи в файл: " + e.getMessage());
             }
         }
 
@@ -104,9 +100,9 @@ public class CodeGenTest {
             // Записываем текст в файл
             writer.write(jusminContent);
 
-            System.out.println("Запись в файл успешно выполнена.");
+//            System.out.println("Запись в файл успешно выполнена.");
         } catch (IOException e) {
-            System.err.println("Ошибка при записи в файл: " + e.getMessage());
+//            System.err.println("Ошибка при записи в файл: " + e.getMessage());
         }
 
     }

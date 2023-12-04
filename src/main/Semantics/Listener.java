@@ -15,7 +15,7 @@ public class Listener extends ILangBaseListener{
         super.enterExpression(ctx);
         try{
             String optimized = optimize(ctx.getText());
-            System.out.println("optimized " + optimized);
+//            System.out.println("optimized " + optimized);
 
             String splitted = ctx.getText().split(">|<|>=|<=|\\+|-|xor|or|and|\\*|=|/|/=")[0];
             try{

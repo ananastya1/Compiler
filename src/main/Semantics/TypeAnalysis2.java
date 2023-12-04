@@ -221,6 +221,14 @@ public class TypeAnalysis2 {
             return HelperStore.globalVariables.get(modifiablePrimaryName).getType();
         }
 
+        if(CodeGenHelper.mainLocalVariable.get(modifiablePrimaryName) != null){
+            return Type.INT;
+        }
+
+        if (CodeGenHelper.scope != null && CodeGenHelper.routineNodes.get(CodeGenHelper.scope) != null && CodeGenHelper.routineNodes.get(CodeGenHelper.scope).localVariable.get(modifiablePrimaryName) != null){
+            return Type.INT;
+        }
+
         return null;
     }
 

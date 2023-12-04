@@ -51,7 +51,9 @@ public class CodeGenHelper {
     static String paramType(String type){
         if (type.equals("Z") || type.equals("I") ||type.equals("F")){
             return type;}
-        else{
+        else if (type.charAt(0) == '['){
+            return type;
+        }else{
             return (new String("L"+type+";"));
         }
     }

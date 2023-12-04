@@ -1,4 +1,4 @@
-// Generated from /Users/shredding/ALL MY/Inno/Year 3/CompilerGit/src/grammar/ILang.g4 by ANTLR 4.13.1
+// Generated from /Users/shredding/ALL MY/Inno/Year 3/compilier new/Compiler/src/grammar/ILang.g4 by ANTLR 4.13.1
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ErrorNode;
