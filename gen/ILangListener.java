@@ -1,4 +1,4 @@
-// Generated from /Users/shredding/ALL MY/Inno/Year 3/compilier new/Compiler/src/grammar/ILang.g4 by ANTLR 4.13.1
+// Generated from C:/Users/admin/Desktop/Compiler/src/grammar/ILang.g4 by ANTLR 4.13.1
 import org.antlr.v4.runtime.tree.ParseTreeListener;
 
 /**
@@ -267,16 +267,6 @@ public interface ILangListener extends ParseTreeListener {
 	 */
 	void exitSimple(ILangParser.SimpleContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link ILangParser#factor}.
-	 * @param ctx the parse tree
-	 */
-	void enterFactor(ILangParser.FactorContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link ILangParser#factor}.
-	 * @param ctx the parse tree
-	 */
-	void exitFactor(ILangParser.FactorContext ctx);
-	/**
 	 * Enter a parse tree produced by {@link ILangParser#summand}.
 	 * @param ctx the parse tree
 	 */
@@ -286,6 +276,16 @@ public interface ILangListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitSummand(ILangParser.SummandContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link ILangParser#factor}.
+	 * @param ctx the parse tree
+	 */
+	void enterFactor(ILangParser.FactorContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link ILangParser#factor}.
+	 * @param ctx the parse tree
+	 */
+	void exitFactor(ILangParser.FactorContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link ILangParser#primary}.
 	 * @param ctx the parse tree

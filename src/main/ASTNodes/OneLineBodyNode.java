@@ -66,9 +66,4 @@ public class OneLineBodyNode extends ASTNode{
 
         return this.returnStatement;
     }
-
-    @Override
-    public void printNode(int depth) {
-
-    }
 }

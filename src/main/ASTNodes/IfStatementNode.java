@@ -21,9 +21,4 @@ public class IfStatementNode extends ASTNode implements StatementNode {
     public BodyNode getFalseBranch() {
         return falseBranch;
     }
-
-    @Override
-    public void printNode(int depth) {
-
-    }
 }

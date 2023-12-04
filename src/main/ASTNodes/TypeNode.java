@@ -6,9 +6,5 @@ public class TypeNode extends ASTNode {
         this.type = type;
     }
 
-    @Override
-    public void printNode(int depth) {
-
-    }
 }
 

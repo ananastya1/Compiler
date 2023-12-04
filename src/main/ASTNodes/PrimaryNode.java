@@ -1,4 +1,4 @@
-public class PrimaryNode extends SummandNode {
+public class PrimaryNode extends FactorNode {
 
     public PrimaryNode(int lineNumber) {
         super("Primary", lineNumber);
@@ -8,8 +8,4 @@ public class PrimaryNode extends SummandNode {
         super(label, lineNumber);
     }
 
-    @Override
-    public void printNode(int depth) {
-
-    }
 }

@@ -97,7 +97,7 @@ statement: assignment
 
 assignment: modifiablePrimary ASSIGN expression;
 
-routineCall : builtInRoutines | Identifier LPAREN ( expression (COMMA expression)* )? RPAREN;
+routineCall : builtInRoutines | Identifier LPAREN (  expression (COMMA expression)* )? RPAREN;
 
 builtInRoutines : writeStatement
                 | inputStatement
@@ -127,11 +127,11 @@ expression: relation ( ( AND | OR | XOR ) relation )*;
 
 relation: simple ( ( LT | LEQ | GT | GEQ | EQ | NEQ ) simple )?;
 
-simple: factor ( ( MUL | DIV | MOD ) factor )*;
+simple: summand ( ( PLUS | MINUS ) summand )*;
 
-factor: summand ( ( PLUS | MINUS ) summand )*;
+summand: factor ( ( MUL | DIV | MOD )  factor )*;
 
-summand: primary | LPAREN expression RPAREN;
+factor: primary | LPAREN expression RPAREN;
 
 primary: (sign)? IntegerLiteral
         | (sign)? RealLiteral

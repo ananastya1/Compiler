@@ -1,4 +1,4 @@
-// Generated from /Users/shredding/ALL MY/Inno/Year 3/compilier new/Compiler/src/grammar/ILang.g4 by ANTLR 4.13.1
+// Generated from C:/Users/admin/Desktop/Compiler/src/grammar/ILang.g4 by ANTLR 4.13.1
 import org.antlr.v4.runtime.atn.*;
 import org.antlr.v4.runtime.dfa.DFA;
 import org.antlr.v4.runtime.*;
@@ -32,7 +32,7 @@ public class ILangParser extends Parser {
 		RULE_forLoop = 15, RULE_range = 16, RULE_ifStatement = 17, RULE_routineDeclaration = 18, 
 		RULE_parameters = 19, RULE_parameterDeclaration = 20, RULE_body = 21, 
 		RULE_returnStatement = 22, RULE_expression = 23, RULE_relation = 24, RULE_simple = 25, 
-		RULE_factor = 26, RULE_summand = 27, RULE_primary = 28, RULE_sign = 29, 
+		RULE_summand = 26, RULE_factor = 27, RULE_primary = 28, RULE_sign = 29, 
 		RULE_modifiablePrimary = 30, RULE_writeStatement = 31, RULE_inputStatement = 32;
 	private static String[] makeRuleNames() {
 		return new String[] {
@@ -40,9 +40,8 @@ public class ILangParser extends Parser {
 			"type", "primitiveType", "userType", "recordType", "arrayType", "statement", 
 			"assignment", "routineCall", "builtInRoutines", "whileLoop", "forLoop", 
 			"range", "ifStatement", "routineDeclaration", "parameters", "parameterDeclaration", 
-			"body", "returnStatement", "expression", "relation", "simple", "factor", 
-			"summand", "primary", "sign", "modifiablePrimary", "writeStatement", 
-			"inputStatement"
+			"body", "returnStatement", "expression", "relation", "simple", "summand", 
+			"factor", "primary", "sign", "modifiablePrimary", "writeStatement", "inputStatement"
 		};
 	}
 	public static final String[] ruleNames = makeRuleNames();
@@ -1912,23 +1911,19 @@ public class ILangParser extends Parser {
 
 	@SuppressWarnings("CheckReturnValue")
 	public static class SimpleContext extends ParserRuleContext {
-		public List<FactorContext> factor() {
-			return getRuleContexts(FactorContext.class);
+		public List<SummandContext> summand() {
+			return getRuleContexts(SummandContext.class);
 		}
-		public FactorContext factor(int i) {
-			return getRuleContext(FactorContext.class,i);
+		public SummandContext summand(int i) {
+			return getRuleContext(SummandContext.class,i);
 		}
-		public List<TerminalNode> MUL() { return getTokens(ILangParser.MUL); }
-		public TerminalNode MUL(int i) {
-			return getToken(ILangParser.MUL, i);
+		public List<TerminalNode> PLUS() { return getTokens(ILangParser.PLUS); }
+		public TerminalNode PLUS(int i) {
+			return getToken(ILangParser.PLUS, i);
 		}
-		public List<TerminalNode> DIV() { return getTokens(ILangParser.DIV); }
-		public TerminalNode DIV(int i) {
-			return getToken(ILangParser.DIV, i);
-		}
-		public List<TerminalNode> MOD() { return getTokens(ILangParser.MOD); }
-		public TerminalNode MOD(int i) {
-			return getToken(ILangParser.MOD, i);
+		public List<TerminalNode> MINUS() { return getTokens(ILangParser.MINUS); }
+		public TerminalNode MINUS(int i) {
+			return getToken(ILangParser.MINUS, i);
 		}
 		public SimpleContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
@@ -1957,16 +1952,16 @@ public class ILangParser extends Parser {
 			enterOuterAlt(_localctx, 1);
 			{
 			setState(244);
-			factor();
+			summand();
 			setState(249);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			while ((((_la) & ~0x3f) == 0 && ((1L << _la) & 481036337152L) != 0)) {
+			while (_la==PLUS || _la==MINUS) {
 				{
 				{
 				setState(245);
 				_la = _input.LA(1);
-				if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & 481036337152L) != 0)) ) {
+				if ( !(_la==PLUS || _la==MINUS) ) {
 				_errHandler.recoverInline(this);
 				}
 				else {
@@ -1975,7 +1970,7 @@ public class ILangParser extends Parser {
 					consume();
 				}
 				setState(246);
-				factor();
+				summand();
 				}
 				}
 				setState(251);
@@ -1996,96 +1991,25 @@ public class ILangParser extends Parser {
 	}
 
 	@SuppressWarnings("CheckReturnValue")
-	public static class FactorContext extends ParserRuleContext {
-		public List<SummandContext> summand() {
-			return getRuleContexts(SummandContext.class);
-		}
-		public SummandContext summand(int i) {
-			return getRuleContext(SummandContext.class,i);
-		}
-		public List<TerminalNode> PLUS() { return getTokens(ILangParser.PLUS); }
-		public TerminalNode PLUS(int i) {
-			return getToken(ILangParser.PLUS, i);
-		}
-		public List<TerminalNode> MINUS() { return getTokens(ILangParser.MINUS); }
-		public TerminalNode MINUS(int i) {
-			return getToken(ILangParser.MINUS, i);
-		}
-		public FactorContext(ParserRuleContext parent, int invokingState) {
-			super(parent, invokingState);
-		}
-		@Override public int getRuleIndex() { return RULE_factor; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof ILangListener ) ((ILangListener)listener).enterFactor(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof ILangListener ) ((ILangListener)listener).exitFactor(this);
-		}
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof ILangVisitor ) return ((ILangVisitor<? extends T>)visitor).visitFactor(this);
-			else return visitor.visitChildren(this);
-		}
-	}
-
-	public final FactorContext factor() throws RecognitionException {
-		FactorContext _localctx = new FactorContext(_ctx, getState());
-		enterRule(_localctx, 52, RULE_factor);
-		int _la;
-		try {
-			enterOuterAlt(_localctx, 1);
-			{
-			setState(252);
-			summand();
-			setState(257);
-			_errHandler.sync(this);
-			_la = _input.LA(1);
-			while (_la==PLUS || _la==MINUS) {
-				{
-				{
-				setState(253);
-				_la = _input.LA(1);
-				if ( !(_la==PLUS || _la==MINUS) ) {
-				_errHandler.recoverInline(this);
-				}
-				else {
-					if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
-					_errHandler.reportMatch(this);
-					consume();
-				}
-				setState(254);
-				summand();
-				}
-				}
-				setState(259);
-				_errHandler.sync(this);
-				_la = _input.LA(1);
-			}
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
 	public static class SummandContext extends ParserRuleContext {
-		public PrimaryContext primary() {
-			return getRuleContext(PrimaryContext.class,0);
+		public List<FactorContext> factor() {
+			return getRuleContexts(FactorContext.class);
 		}
-		public TerminalNode LPAREN() { return getToken(ILangParser.LPAREN, 0); }
-		public ExpressionContext expression() {
-			return getRuleContext(ExpressionContext.class,0);
+		public FactorContext factor(int i) {
+			return getRuleContext(FactorContext.class,i);
 		}
-		public TerminalNode RPAREN() { return getToken(ILangParser.RPAREN, 0); }
+		public List<TerminalNode> MUL() { return getTokens(ILangParser.MUL); }
+		public TerminalNode MUL(int i) {
+			return getToken(ILangParser.MUL, i);
+		}
+		public List<TerminalNode> DIV() { return getTokens(ILangParser.DIV); }
+		public TerminalNode DIV(int i) {
+			return getToken(ILangParser.DIV, i);
+		}
+		public List<TerminalNode> MOD() { return getTokens(ILangParser.MOD); }
+		public TerminalNode MOD(int i) {
+			return getToken(ILangParser.MOD, i);
+		}
 		public SummandContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
@@ -2107,7 +2031,82 @@ public class ILangParser extends Parser {
 
 	public final SummandContext summand() throws RecognitionException {
 		SummandContext _localctx = new SummandContext(_ctx, getState());
-		enterRule(_localctx, 54, RULE_summand);
+		enterRule(_localctx, 52, RULE_summand);
+		int _la;
+		try {
+			enterOuterAlt(_localctx, 1);
+			{
+			setState(252);
+			factor();
+			setState(257);
+			_errHandler.sync(this);
+			_la = _input.LA(1);
+			while ((((_la) & ~0x3f) == 0 && ((1L << _la) & 481036337152L) != 0)) {
+				{
+				{
+				setState(253);
+				_la = _input.LA(1);
+				if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & 481036337152L) != 0)) ) {
+				_errHandler.recoverInline(this);
+				}
+				else {
+					if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+					_errHandler.reportMatch(this);
+					consume();
+				}
+				setState(254);
+				factor();
+				}
+				}
+				setState(259);
+				_errHandler.sync(this);
+				_la = _input.LA(1);
+			}
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			_errHandler.reportError(this, re);
+			_errHandler.recover(this, re);
+		}
+		finally {
+			exitRule();
+		}
+		return _localctx;
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class FactorContext extends ParserRuleContext {
+		public PrimaryContext primary() {
+			return getRuleContext(PrimaryContext.class,0);
+		}
+		public TerminalNode LPAREN() { return getToken(ILangParser.LPAREN, 0); }
+		public ExpressionContext expression() {
+			return getRuleContext(ExpressionContext.class,0);
+		}
+		public TerminalNode RPAREN() { return getToken(ILangParser.RPAREN, 0); }
+		public FactorContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_factor; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof ILangListener ) ((ILangListener)listener).enterFactor(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof ILangListener ) ((ILangListener)listener).exitFactor(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof ILangVisitor ) return ((ILangVisitor<? extends T>)visitor).visitFactor(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+
+	public final FactorContext factor() throws RecognitionException {
+		FactorContext _localctx = new FactorContext(_ctx, getState());
+		enterRule(_localctx, 54, RULE_factor);
 		try {
 			setState(265);
 			_errHandler.sync(this);
@@ -2646,7 +2645,7 @@ public class ILangParser extends Parser {
 		" \u0001 \u0001 \u0001 \u0001 \u0001 \u0000\u0000!\u0000\u0002\u0004\u0006"+
 		"\b\n\f\u000e\u0010\u0012\u0014\u0016\u0018\u001a\u001c\u001e \"$&(*,."+
 		"02468:<>@\u0000\u0005\u0001\u0000)+\u0001\u0000\u001b\u001d\u0001\u0000"+
-		"\u001e#\u0001\u0000$&\u0001\u0000\'(\u014e\u0000E\u0001\u0000\u0000\u0000"+
+		"\u001e#\u0001\u0000\'(\u0001\u0000$&\u014e\u0000E\u0001\u0000\u0000\u0000"+
 		"\u0002M\u0001\u0000\u0000\u0000\u0004Q\u0001\u0000\u0000\u0000\u0006_"+
 		"\u0001\u0000\u0000\u0000\ba\u0001\u0000\u0000\u0000\ni\u0001\u0000\u0000"+
 		"\u0000\fk\u0001\u0000\u0000\u0000\u000eo\u0001\u0000\u0000\u0000\u0010"+
@@ -2773,7 +2772,7 @@ public class ILangParser extends Parser {
 		"\u0000\u0117\u010c\u0001\u0000\u0000\u0000\u0117\u0110\u0001\u0000\u0000"+
 		"\u0000\u0117\u0113\u0001\u0000\u0000\u0000\u0117\u0114\u0001\u0000\u0000"+
 		"\u0000\u0117\u0115\u0001\u0000\u0000\u0000\u0117\u0116\u0001\u0000\u0000"+
-		"\u0000\u01189\u0001\u0000\u0000\u0000\u0119\u011a\u0007\u0004\u0000\u0000"+
+		"\u0000\u01189\u0001\u0000\u0000\u0000\u0119\u011a\u0007\u0003\u0000\u0000"+
 		"\u011a;\u0001\u0000\u0000\u0000\u011b\u0124\u00052\u0000\u0000\u011c\u011d"+
 		"\u0005\u0014\u0000\u0000\u011d\u0123\u00052\u0000\u0000\u011e\u011f\u0005"+
 		"\u0016\u0000\u0000\u011f\u0120\u0003.\u0017\u0000\u0120\u0121\u0005\u0017"+

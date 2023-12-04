@@ -15,9 +15,4 @@ public class WhileLoopNode extends ASTNode implements StatementNode {
     public BodyNode getBody() {
         return body;
     }
-
-    @Override
-    public void printNode(int depth) {
-
-    }
 }

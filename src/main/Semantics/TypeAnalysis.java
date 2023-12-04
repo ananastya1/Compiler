@@ -26,38 +26,38 @@ public class TypeAnalysis {
 
     // (MUL, DIV, MOD, PLUS, MINUS)
     public Type analyzeSimple(ILangParser.SimpleContext ctx) {
-        if (ctx.factor() == null) {
-            return null;
-        }
-
-        if (ctx.factor().size() == 1) {
-            return analyzeFactor(ctx.factor(0));
-        }
-
-        Type leftType = analyzeFactor(ctx.factor(0));
-        Type rightType = analyzeFactor(ctx.factor(1));
-        return getPrimitiveType(leftType, rightType);
-
-    }
-
-
-    // (PLUS, MINUS)
-    public Type analyzeFactor(ILangParser.FactorContext ctx) {
         if (ctx.summand() == null) {
             return null;
         }
+
         if (ctx.summand().size() == 1) {
             return analyzeSummand(ctx.summand(0));
         }
 
         Type leftType = analyzeSummand(ctx.summand(0));
         Type rightType = analyzeSummand(ctx.summand(1));
+        return getPrimitiveType(leftType, rightType);
+
+    }
+
+
+    // (PLUS, MINUS)
+    public Type analyzeSummand(ILangParser.SummandContext ctx) {
+        if (ctx.factor() == null) {
+            return null;
+        }
+        if (ctx.factor().size() == 1) {
+            return analyzeFactor(ctx.factor(0));
+        }
+
+        Type leftType = analyzeFactor(ctx.factor(0));
+        Type rightType = analyzeFactor(ctx.factor(1));
 
         return getPrimitiveType(leftType, rightType);
     }
 
     // (MUL, DIV, MOD)
-    public Type analyzeSummand(ILangParser.SummandContext ctx) {
+    public Type analyzeFactor(ILangParser.FactorContext ctx) {
 
         if (ctx.primary() != null) {
             return analyzePrimary(ctx.primary());
@@ -89,6 +89,18 @@ public class TypeAnalysis {
                 Type type = HelperStore.inputType.getType();
                 HelperStore.inputType = null;
                 return type;
+            }
+
+            if (ctx.getText().contains("input")){
+                String newText = ctx.getText().replaceAll("input", "");
+
+                if (newText.equals("(integer)")){
+                    return Type.INT;
+                }else if(newText.equals("(real)")){
+                    return Type.REAL;
+                }else if(newText.equals("(boolean)")){
+                    return Type.BOOLEAN;
+                }
             }
 
             String routineName = ctx.routineCall().Identifier().getText();
@@ -207,6 +219,14 @@ public class TypeAnalysis {
 
         if (HelperStore.globalVariables.get(modifiablePrimaryName) != null) {
             return HelperStore.globalVariables.get(modifiablePrimaryName).getType();
+        }
+
+        if(CodeGenHelper.mainLocalVariable.get(modifiablePrimaryName) != null){
+            return Type.INT;
+        }
+
+        if (CodeGenHelper.scope != null && CodeGenHelper.routineNodes.get(CodeGenHelper.scope) != null && CodeGenHelper.routineNodes.get(CodeGenHelper.scope).localVariable.get(modifiablePrimaryName) != null){
+            return Type.INT;
         }
 
         return null;

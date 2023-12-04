@@ -11,9 +11,4 @@ public class ModifiablePrimaryRightPartNode extends ASTNode {
         super("ModifiablePrimaryRightPartNode", lineNumber);
         this.expressionNode = expressionNode;
     }
-
-    @Override
-    public void printNode(int depth) {
-
-    }
 }

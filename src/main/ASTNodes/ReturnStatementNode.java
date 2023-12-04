@@ -9,9 +9,4 @@ public class ReturnStatementNode extends ASTNode {
     public ExpressionNode getExpression() {
         return expression;
     }
-
-    @Override
-    public void printNode(int depth) {
-
-    }
 }

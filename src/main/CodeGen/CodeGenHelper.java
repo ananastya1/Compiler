@@ -25,7 +25,7 @@ public class CodeGenHelper {
     static HashMap<String,ArrayJasminNode> arrays = new HashMap<>();
     static String arrayTemp = null;
 
-    static TypeAnalysis2 typeAnalyse = new TypeAnalysis2();
+    static TypeAnalysis typeAnalyse = new TypeAnalysis();
 
     static String codeBuilder(){
         StringBuilder resultCode = new StringBuilder();

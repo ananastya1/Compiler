@@ -125,9 +125,9 @@ public class CodeGenTest {
 
     private static ParseTree treeCreateCodeGeneration(String content) throws IOException {
         CharStream input = CharStreams.fromString(content);
-        IlangCodeGenerationLexer lexer = new IlangCodeGenerationLexer(input);
+        ILangLexer lexer = new ILangLexer(input);
         CommonTokenStream tokens = new CommonTokenStream(lexer);
-        IlangCodeGenerationParser parser = new IlangCodeGenerationParser(tokens);
+        ILangParser parser = new ILangParser(tokens);
         parser.removeErrorListeners();
         parser.addErrorListener(new ErrorListener());
         ParseTree tree = parser.main();

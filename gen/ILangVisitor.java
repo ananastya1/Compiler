@@ -1,4 +1,4 @@
-// Generated from /Users/shredding/ALL MY/Inno/Year 3/compilier new/Compiler/src/grammar/ILang.g4 by ANTLR 4.13.1
+// Generated from C:/Users/admin/Desktop/Compiler/src/grammar/ILang.g4 by ANTLR 4.13.1
 import org.antlr.v4.runtime.tree.ParseTreeVisitor;
 
 /**
@@ -166,17 +166,17 @@ public interface ILangVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitSimple(ILangParser.SimpleContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link ILangParser#factor}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitFactor(ILangParser.FactorContext ctx);
-	/**
 	 * Visit a parse tree produced by {@link ILangParser#summand}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	T visitSummand(ILangParser.SummandContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link ILangParser#factor}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitFactor(ILangParser.FactorContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link ILangParser#primary}.
 	 * @param ctx the parse tree

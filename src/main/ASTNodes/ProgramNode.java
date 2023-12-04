@@ -16,17 +16,4 @@ public class ProgramNode extends ASTNode {
     public List<ASTNode> getProgramNodes() {
         return programNodes;
     }
-
-
-    @Override
-    public void printNode(int depth) {
-
-        String indent = "  ".repeat(depth);
-        System.out.println(indent + this.label);
-        System.out.print(indent + "|__");
-
-        for (ASTNode programNode : programNodes) {
-            programNode.printNode(depth + 2);
-        }
-    }
 }

@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class JusminCodeGeneration extends IlangCodeGenerationBaseVisitor<String>{
+public class JusminCodeGeneration extends ILangBaseVisitor<String>{
     /**
      * {@inheritDoc}
      *
@@ -14,7 +14,7 @@ public class JusminCodeGeneration extends IlangCodeGenerationBaseVisitor<String>
      * @param ctx
      */
     @Override
-    public String visitMain(IlangCodeGenerationParser.MainContext ctx) {
+    public String visitMain(ILangParser.MainContext ctx) {
 
         CodeGenHelper.mainCode.append(".method public static main([Ljava/lang/String;)V\n");
         CodeGenHelper.mainCode.append("\t.limit stack 100\n");
@@ -24,7 +24,7 @@ public class JusminCodeGeneration extends IlangCodeGenerationBaseVisitor<String>
 
 
         // Генерация кода для обхода дочерних узлов
-        for (IlangCodeGenerationParser.ProgramContext programContext : ctx.program()) {
+        for (ILangParser.ProgramContext programContext : ctx.program()) {
             CodeGenHelper.mainCode.append(visit(programContext));
         }
 
@@ -44,7 +44,7 @@ public class JusminCodeGeneration extends IlangCodeGenerationBaseVisitor<String>
      * @param ctx
      */
     @Override
-    public String visitProgram(IlangCodeGenerationParser.ProgramContext ctx) {
+    public String visitProgram(ILangParser.ProgramContext ctx) {
 
         if (ctx.simpleDeclaration() != null) { // simpleDeclaration
             return visit(ctx.simpleDeclaration());
@@ -67,7 +67,7 @@ public class JusminCodeGeneration extends IlangCodeGenerationBaseVisitor<String>
      * @param ctx
      */
     @Override
-    public String visitSimpleDeclaration(IlangCodeGenerationParser.SimpleDeclarationContext ctx) {
+    public String visitSimpleDeclaration(ILangParser.SimpleDeclarationContext ctx) {
 
         if (ctx.variableDeclaration() != null) {
             return visit(ctx.variableDeclaration());
@@ -87,7 +87,7 @@ public class JusminCodeGeneration extends IlangCodeGenerationBaseVisitor<String>
      * @param ctx
      */
     @Override
-    public String visitVariableDeclaration(IlangCodeGenerationParser.VariableDeclarationContext ctx) {
+    public String visitVariableDeclaration(ILangParser.VariableDeclarationContext ctx) {
         String identifier = ctx.Identifier().getText();
         String type=null;
         if (ctx.type()!=null){
@@ -207,7 +207,7 @@ public class JusminCodeGeneration extends IlangCodeGenerationBaseVisitor<String>
      * @param ctx
      */
     @Override
-    public String visitTypeDeclaration(IlangCodeGenerationParser.TypeDeclarationContext ctx) {
+    public String visitTypeDeclaration(ILangParser.TypeDeclarationContext ctx) {
         StringBuilder typeCode = new StringBuilder();
 
         if (ctx.type().userType().arrayType() != null){
@@ -322,7 +322,7 @@ public class JusminCodeGeneration extends IlangCodeGenerationBaseVisitor<String>
      * @param ctx
      */
     @Override
-    public String visitType(IlangCodeGenerationParser.TypeContext ctx) {
+    public String visitType(ILangParser.TypeContext ctx) {
         if (ctx.primitiveType() != null) {
             return visit(ctx.primitiveType());
         } else if (ctx.userType() != null) {
@@ -342,7 +342,7 @@ public class JusminCodeGeneration extends IlangCodeGenerationBaseVisitor<String>
      * @param ctx
      */
     @Override
-    public String visitPrimitiveType(IlangCodeGenerationParser.PrimitiveTypeContext ctx) {
+    public String visitPrimitiveType(ILangParser.PrimitiveTypeContext ctx) {
         if (ctx.INTEGER_KEYWORD() != null) {
             return "I";
         } else if (ctx.REAL_KEYWORD() != null) {
@@ -363,7 +363,7 @@ public class JusminCodeGeneration extends IlangCodeGenerationBaseVisitor<String>
      * @param ctx
      */
     @Override
-    public String visitUserType(IlangCodeGenerationParser.UserTypeContext ctx) {
+    public String visitUserType(ILangParser.UserTypeContext ctx) {
         if (ctx.arrayType() != null) {
             return visit(ctx.arrayType());
         }
@@ -381,7 +381,7 @@ public class JusminCodeGeneration extends IlangCodeGenerationBaseVisitor<String>
      * @param ctx
      */
     @Override
-    public String visitRecordType(IlangCodeGenerationParser.RecordTypeContext ctx) {
+    public String visitRecordType(ILangParser.RecordTypeContext ctx) {
         StringBuilder recordCodeType = new StringBuilder();
 
         for (int i = 0; i <  ctx.variableDeclaration().size() ; i++) {
@@ -400,7 +400,7 @@ public class JusminCodeGeneration extends IlangCodeGenerationBaseVisitor<String>
      * @param ctx
      */
     @Override
-    public String visitArrayType(IlangCodeGenerationParser.ArrayTypeContext ctx) {
+    public String visitArrayType(ILangParser.ArrayTypeContext ctx) {
         StringBuilder arrayCode = new StringBuilder();
         boolean isRecordArray = false;
         List<Integer> sizes = new ArrayList<>();
@@ -508,7 +508,7 @@ public class JusminCodeGeneration extends IlangCodeGenerationBaseVisitor<String>
      * @param ctx
      */
     @Override
-    public String visitStatement(IlangCodeGenerationParser.StatementContext ctx) {
+    public String visitStatement(ILangParser.StatementContext ctx) {
         if (ctx.assignment() != null) {
             return visit(ctx.assignment());
 
@@ -537,7 +537,7 @@ public class JusminCodeGeneration extends IlangCodeGenerationBaseVisitor<String>
      * @param ctx
      */
     @Override
-    public String visitAssignment(IlangCodeGenerationParser.AssignmentContext ctx) {
+    public String visitAssignment(ILangParser.AssignmentContext ctx) {
        StringBuilder assignmentCode = new StringBuilder();
 
         String expression = visit(ctx.expression());
@@ -599,7 +599,7 @@ public class JusminCodeGeneration extends IlangCodeGenerationBaseVisitor<String>
      * @param ctx
      */
     @Override
-    public String visitRoutineCall(IlangCodeGenerationParser.RoutineCallContext ctx) {
+    public String visitRoutineCall(ILangParser.RoutineCallContext ctx) {
         if (ctx.builtInRoutines() != null) {
             return visit(ctx.builtInRoutines());
         }
@@ -625,7 +625,7 @@ public class JusminCodeGeneration extends IlangCodeGenerationBaseVisitor<String>
      * @param ctx
      */
     @Override
-    public String visitBuiltInRoutines(IlangCodeGenerationParser.BuiltInRoutinesContext ctx) {
+    public String visitBuiltInRoutines(ILangParser.BuiltInRoutinesContext ctx) {
 
         if (ctx.writeStatement() != null) {
             return visit(ctx.writeStatement());
@@ -644,7 +644,7 @@ public class JusminCodeGeneration extends IlangCodeGenerationBaseVisitor<String>
      * @param ctx
      */
     @Override
-    public String visitWhileLoop(IlangCodeGenerationParser.WhileLoopContext ctx) {
+    public String visitWhileLoop(ILangParser.WhileLoopContext ctx) {
         StringBuilder whileCode = new StringBuilder();
 
         whileCode.append("WhileLoopStart").append(ctx.getStart().getStartIndex()).append(":").append("\n");
@@ -669,7 +669,7 @@ public class JusminCodeGeneration extends IlangCodeGenerationBaseVisitor<String>
      * @param ctx
      */
     @Override
-    public String visitForLoop(IlangCodeGenerationParser.ForLoopContext ctx) {
+    public String visitForLoop(ILangParser.ForLoopContext ctx) {
         StringBuilder forLoopCode = new StringBuilder();
 
         String[] rangeCodeSplitted = visit(ctx.range()).split("\n@@@\n");
@@ -734,7 +734,7 @@ public class JusminCodeGeneration extends IlangCodeGenerationBaseVisitor<String>
      * @param ctx
      */
     @Override
-    public String visitRange(IlangCodeGenerationParser.RangeContext ctx) {
+    public String visitRange(ILangParser.RangeContext ctx) {
         String leftPart = visit(ctx.expression(0));
         String rightPart = visit(ctx.expression(1));
 
@@ -750,7 +750,7 @@ public class JusminCodeGeneration extends IlangCodeGenerationBaseVisitor<String>
      * @param ctx
      */
     @Override
-    public String visitIfStatement(IlangCodeGenerationParser.IfStatementContext ctx) {
+    public String visitIfStatement(ILangParser.IfStatementContext ctx) {
         StringBuilder ifCode = new StringBuilder();
         String expressionCode = visit(ctx.expression());
         ifCode.append(expressionCode);
@@ -781,7 +781,7 @@ public class JusminCodeGeneration extends IlangCodeGenerationBaseVisitor<String>
      * @param ctx
      */
     @Override
-    public String visitRoutineDeclaration(IlangCodeGenerationParser.RoutineDeclarationContext ctx) {
+    public String visitRoutineDeclaration(ILangParser.RoutineDeclarationContext ctx) {
         StringBuilder rotuineCode = new StringBuilder();
 
         String routineName = ctx.Identifier().getText();
@@ -864,9 +864,9 @@ public class JusminCodeGeneration extends IlangCodeGenerationBaseVisitor<String>
      * @param ctx
      */
     @Override
-    public String visitParameters(IlangCodeGenerationParser.ParametersContext ctx) {
+    public String visitParameters(ILangParser.ParametersContext ctx) {
         StringBuilder parameters = new StringBuilder();
-        for (IlangCodeGenerationParser.ParameterDeclarationContext paramCtx : ctx.parameterDeclaration()) {
+        for (ILangParser.ParameterDeclarationContext paramCtx : ctx.parameterDeclaration()) {
             parameters.append(visit(paramCtx)).append(",");
         }
         parameters.deleteCharAt(parameters.lastIndexOf(","));
@@ -882,7 +882,7 @@ public class JusminCodeGeneration extends IlangCodeGenerationBaseVisitor<String>
      * @param ctx
      */
     @Override
-    public String visitParameterDeclaration(IlangCodeGenerationParser.ParameterDeclarationContext ctx) {
+    public String visitParameterDeclaration(ILangParser.ParameterDeclarationContext ctx) {
         return ctx.Identifier().getText() + "@" + visit(ctx.type());
     }
 
@@ -895,7 +895,7 @@ public class JusminCodeGeneration extends IlangCodeGenerationBaseVisitor<String>
      * @param ctx
      */
     @Override
-    public String visitBody(IlangCodeGenerationParser.BodyContext ctx) {
+    public String visitBody(ILangParser.BodyContext ctx) {
         StringBuilder bodyCode = new StringBuilder();
         for (ParseTree child : ctx.children) {
             bodyCode.append("\t").append(visit(child)).append("\n");
@@ -913,7 +913,7 @@ public class JusminCodeGeneration extends IlangCodeGenerationBaseVisitor<String>
      * @param ctx
      */
     @Override
-    public String visitReturnStatement(IlangCodeGenerationParser.ReturnStatementContext ctx) {
+    public String visitReturnStatement(ILangParser.ReturnStatementContext ctx) {
         RoutineJasminNode routine = CodeGenHelper.routineNodes.get(CodeGenHelper.scope);
         StringBuilder returnCode = new StringBuilder();
 
@@ -940,7 +940,7 @@ public class JusminCodeGeneration extends IlangCodeGenerationBaseVisitor<String>
      * @param ctx
      */
     @Override
-    public String visitExpression(IlangCodeGenerationParser.ExpressionContext ctx) {
+    public String visitExpression(ILangParser.ExpressionContext ctx) {
         StringBuilder ExpressionCode = new StringBuilder();
 
         String firstRelation = visit(ctx.relation(0));
@@ -970,7 +970,7 @@ public class JusminCodeGeneration extends IlangCodeGenerationBaseVisitor<String>
 
     }
 
-    private LogicalOperator determineLogicalOperator(IlangCodeGenerationParser.ExpressionContext ctx, int operatorIndex) {
+    private LogicalOperator determineLogicalOperator(ILangParser.ExpressionContext ctx, int operatorIndex) {
         if (ctx.AND(operatorIndex) != null) {
             return LogicalOperator.AND;
         } else if (ctx.OR(operatorIndex) != null) {
@@ -989,7 +989,7 @@ public class JusminCodeGeneration extends IlangCodeGenerationBaseVisitor<String>
      * @param ctx
      */
     @Override
-    public String visitRelation(IlangCodeGenerationParser.RelationContext ctx) {
+    public String visitRelation(ILangParser.RelationContext ctx) {
         StringBuilder RelationCode = new StringBuilder();
 
         String firstSimple = visit(ctx.simple(0));
@@ -1034,7 +1034,7 @@ public class JusminCodeGeneration extends IlangCodeGenerationBaseVisitor<String>
         return RelationCode.toString();
     }
 
-    private ComparisonOperator determineComparisonOperator(IlangCodeGenerationParser.RelationContext ctx) {
+    private ComparisonOperator determineComparisonOperator(ILangParser.RelationContext ctx) {
         if (ctx.LT() != null) {
             return ComparisonOperator.LT;
         } else if (ctx.LEQ() != null) {
@@ -1060,7 +1060,7 @@ public class JusminCodeGeneration extends IlangCodeGenerationBaseVisitor<String>
      * @param ctx
      */
     @Override
-    public String visitSimple(IlangCodeGenerationParser.SimpleContext ctx) {
+    public String visitSimple(ILangParser.SimpleContext ctx) {
         StringBuilder FactorCode = new StringBuilder();
 
         String firstSummand = visit(ctx.summand(0));
@@ -1099,7 +1099,7 @@ public class JusminCodeGeneration extends IlangCodeGenerationBaseVisitor<String>
 
 
     @Override
-    public String visitSummand(IlangCodeGenerationParser.SummandContext ctx) {
+    public String visitSummand(ILangParser.SummandContext ctx) {
         StringBuilder SimpleCode = new StringBuilder();
 
         String firstFactor = visit(ctx.factor(0));
@@ -1152,7 +1152,7 @@ public class JusminCodeGeneration extends IlangCodeGenerationBaseVisitor<String>
      * @param ctx
      */
     @Override
-    public String visitFactor(IlangCodeGenerationParser.FactorContext ctx) {
+    public String visitFactor(ILangParser.FactorContext ctx) {
         if (ctx.primary() != null){
             return visit(ctx.primary());
         }else{
@@ -1169,7 +1169,7 @@ public class JusminCodeGeneration extends IlangCodeGenerationBaseVisitor<String>
      * @param ctx
      */
     @Override
-    public String visitPrimary(IlangCodeGenerationParser.PrimaryContext ctx) {
+    public String visitPrimary(ILangParser.PrimaryContext ctx) {
         StringBuilder primaryCode = new StringBuilder();
 
         if (ctx.IntegerLiteral() != null){
@@ -1260,7 +1260,7 @@ public class JusminCodeGeneration extends IlangCodeGenerationBaseVisitor<String>
      * @param ctx
      */
     @Override
-    public String visitModifiablePrimary(IlangCodeGenerationParser.ModifiablePrimaryContext ctx) {
+    public String visitModifiablePrimary(ILangParser.ModifiablePrimaryContext ctx) {
         StringBuilder modifiablePrimaryCode = new StringBuilder();
 
         if (ctx.getChildCount() == 1){
@@ -1303,7 +1303,7 @@ public class JusminCodeGeneration extends IlangCodeGenerationBaseVisitor<String>
                     continue;
                 }
 
-                if (ctx.getChild(i) instanceof IlangCodeGenerationParser.ExpressionContext){
+                if (ctx.getChild(i) instanceof ILangParser.ExpressionContext){
                     modifiablePrimaryCode.append(visit(ctx.getChild(i)));
                     modifiablePrimaryCode.append("ldc 1\nisub\n");
                     if (i != ctx.getChildCount() - 2){
@@ -1385,7 +1385,7 @@ public class JusminCodeGeneration extends IlangCodeGenerationBaseVisitor<String>
      * @param ctx
      */
     @Override
-    public String visitWriteStatement(IlangCodeGenerationParser.WriteStatementContext ctx) {
+    public String visitWriteStatement(ILangParser.WriteStatementContext ctx) {
         StringBuilder writeCode = new StringBuilder();
         boolean ifExpression = false;
         String expressionCode = "";
@@ -1448,7 +1448,7 @@ public class JusminCodeGeneration extends IlangCodeGenerationBaseVisitor<String>
      * @param ctx
      */
     @Override
-    public String visitInputStatement(IlangCodeGenerationParser.InputStatementContext ctx) {
+    public String visitInputStatement(ILangParser.InputStatementContext ctx) {
         StringBuilder inputCode = new StringBuilder();
         // new Scanner
         inputCode.append("new java/util/Scanner\n").append("dup\n");

@@ -21,12 +21,4 @@ public class ArrayTypeNode extends UserTypeNode implements Node {
     public int getArraySizeInt() {
         return arraySizeInt;
     }
-
-    @Override
-    public void printNode(int depth) {
-        String indent = "  ".repeat(depth);
-        System.out.println(indent + this.label);
-        elementType.printNode(depth + 1);
-        arraySize.printNode(depth + 1);
-    }
 }

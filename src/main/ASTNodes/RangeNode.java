@@ -15,9 +15,4 @@ public class RangeNode extends ASTNode {
     public ExpressionNode getEndExpression() {
         return endExpression;
     }
-
-    @Override
-    public void printNode(int depth) {
-
-    }
 }

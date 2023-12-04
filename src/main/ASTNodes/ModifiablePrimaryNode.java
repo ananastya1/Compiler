@@ -19,10 +19,5 @@ public class ModifiablePrimaryNode extends PrimaryNode {
         return accessorList;
     }
 
-    @Override
-    public void printNode(int depth) {
-//        String indent = "  ".repeat(depth);
-//        System.out.println(value);
-//        System.out.print(indent + "|__");
-    }
+
 }

@@ -47,6 +47,12 @@
             <artifactId>js-scriptengine</artifactId>
             <version>23.1.1</version>
         </dependency>
+        <dependency>
+            <groupId>jasmin</groupId>
+            <artifactId>jasmin</artifactId>
+            <version>2.4</version>
+            <scope>compile</scope>
+        </dependency>
 
     </dependencies>
 
@@ -81,5 +87,12 @@
         </plugins>
 
     </build>
+    <repositories>
+        <repository>
+            <id>clojars</id>
+            <name>Clojars</name>
+            <url>https://repo.clojars.org/</url>
+        </repository>
+    </repositories>
 
 </project>
