@@ -134,3 +134,32 @@ public class CodeGenTest {
         return tree;
     }
 }
+
+class MainClass {
+    static boolean[] is_prime;
+    static int j;
+
+    public static void main(String[] args) {
+        is_prime = new boolean[100];
+
+        for(int i = 2; i <= is_prime.length; ++i) {
+            is_prime[i - 1] = true;
+        }
+
+        for(int i = 2; i >= is_prime.length; --i) {
+            if (is_prime[i - 1]) {
+                for(j = 2 * i; (j <= is_prime.length ? 1 : 0) != 0; j += i) {
+                    is_prime[j - 1] = false;
+                }
+            }
+        }
+
+        for(int i = 2; i <= is_prime.length; ++i) {
+            if (is_prime[i - 1]) {
+                System.out.print(i);
+                System.out.print(" ");
+            }
+        }
+
+    }
+}

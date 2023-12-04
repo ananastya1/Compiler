@@ -185,14 +185,11 @@ public class JusminCodeGeneration extends ILangBaseVisitor<String>{
         if (ctx.expression() != null){
             String expressionCode = visit(ctx.expression());
             localVariable += expressionCode + "\n";
-            String typeStore = "";
-            if (type.equals("I")){
-                typeStore = "i";
-            }else if (type.equals("Z")){
-                typeStore = "z";
-            }else if (type.equals("F")){
-                typeStore = "f";
-            }
+            String typeStore = switch (type) {
+                case "I", "Z" -> "i";
+                case "F" -> "f";
+                default -> "";
+            };
             typeStore += "store ";
 
             localVariable += typeStore + (routine.numOfLocalVariables - 1);
@@ -552,7 +549,7 @@ public class JusminCodeGeneration extends ILangBaseVisitor<String>{
            assignmentCode.append(expression).append("\n");
 
            if (CodeGenHelper.scope != null && parseInteger(modifiablePrimarySplitted[1]) != null){
-               assignmentCode.append(modifiablePrimarySplitted[0]).append("store ").append(modifiablePrimarySplitted[1]).append("\n");
+               assignmentCode.append(modifiablePrimarySplitted[0].equals("z") ? "i" :modifiablePrimarySplitted[0] ).append("store ").append(modifiablePrimarySplitted[1]).append("\n");
                return assignmentCode.toString();
            }
 
@@ -570,8 +567,8 @@ public class JusminCodeGeneration extends ILangBaseVisitor<String>{
                ArrayJasminNode arr = CodeGenHelper.arrays.get(ctx.modifiablePrimary().getChild(0).getText());
                String storeType = switch (arr.type) {
                    case "I" -> "i";
+                   case "Z" -> "b";
                    case "F" -> "f";
-                   case "Z" -> "z";
                    default -> "";
                };
                assignmentCode.append(expression).append("\n");
@@ -1226,8 +1223,8 @@ public class JusminCodeGeneration extends ILangBaseVisitor<String>{
                     ArrayJasminNode arr = CodeGenHelper.arrays.get(ctx.modifiablePrimary().getChild(0).getText());
                     String storeType = switch (arr.type) {
                         case "I" -> "i";
+                        case "Z" -> "b";
                         case "F" -> "f";
-                        case "Z" -> "z";
                         default -> "";
                     };
                     primaryCode.append(storeType).append("aload\n");
@@ -1468,6 +1465,7 @@ public class JusminCodeGeneration extends ILangBaseVisitor<String>{
         }else if (type.equals("F")){
             inputCode.append("invokevirtual java/util/Scanner/nextFloat()F\n");
         }
+        inputCode.append("swap\n").append("pop\n");
 
         return inputCode.toString();
     }
