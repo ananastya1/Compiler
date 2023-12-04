@@ -30,7 +30,6 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
      */
     @Override
     public ASTNode visitProgram(ILangParser.ProgramContext ctx) {
-
         if (ctx.simpleDeclaration() != null) { // simpleDeclaration
             return visit(ctx.simpleDeclaration());
 
@@ -843,10 +842,10 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
      * @return the visitor result
      */
     @Override
-    public ASTNode visitSimple(ILangParser.SimpleContext ctx) {
+    public ASTNode visitSummand(ILangParser.SummandContext ctx) {
         FactorNode leftSide = (FactorNode) visit(ctx.factor(0));
 
-        List<SimpleNodeRightSide> rightSide = new ArrayList<>();
+        List<SummandNodeRightSide> rightSide = new ArrayList<>();
 
         for (int i = 1; i < ctx.factor().size(); i++) {
             FactorOperator operator = ctx.MUL(i - 1) != null ? FactorOperator.MUL :
@@ -854,10 +853,10 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
                             ctx.MOD(i - 1) != null ? FactorOperator.MOD : null;
 
             FactorNode nextFactor = (FactorNode) visit(ctx.factor(i));
-            rightSide.add(new SimpleNodeRightSide(operator, nextFactor, ctx.getStart().getLine()));
+            rightSide.add(new SummandNodeRightSide(operator, nextFactor, ctx.getStart().getLine()));
         }
 
-        return new SimpleNode(leftSide, rightSide, ctx.getStart().getLine() );
+        return new SummandNode(leftSide, rightSide, ctx.getStart().getLine() );
     }
 
     /**
@@ -867,17 +866,17 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
      * @return the visitor result
      */
     @Override
-    public ASTNode visitFactor(ILangParser.FactorContext ctx) {
+    public ASTNode visitSimple(ILangParser.SimpleContext ctx) {
         SummandNode leftSide = (SummandNode) visit(ctx.summand(0));
-        List<FactorNodeRightSide> rightSide = new ArrayList<>();
+        List<SimpleNodeRightSide> rightSide = new ArrayList<>();
 
         for (int i = 1; i < ctx.summand().size(); i++) {
             SummandOperator operator = ctx.PLUS(i - 1) != null ? SummandOperator.PLUS : SummandOperator.MINUS;
             SummandNode nextSummand = (SummandNode) visit(ctx.summand(i));
-            rightSide.add(new FactorNodeRightSide(operator,nextSummand, ctx.getStart().getLine()));
+            rightSide.add(new SimpleNodeRightSide(operator,nextSummand, ctx.getStart().getLine()));
         }
 
-        return new FactorNode(leftSide, rightSide, ctx.getStart().getLine());
+        return new SimpleNode(leftSide, rightSide, ctx.getStart().getLine());
 
     }
 
@@ -888,12 +887,12 @@ public class Visitor extends ILangBaseVisitor<ASTNode> {
      * @return the visitor result
      */
     @Override
-    public ASTNode visitSummand(ILangParser.SummandContext ctx) {
+    public ASTNode visitFactor(ILangParser.FactorContext ctx) {
 
         if (ctx.primary() != null){
             return visit(ctx.primary());
         }else{
-            return new SummandNode((ExpressionNode) visit(ctx.expression()), ctx.getStart().getLine());
+            return new FactorNode((ExpressionNode) visit(ctx.expression()), ctx.getStart().getLine());
         }
     }
 

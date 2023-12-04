@@ -9,10 +9,4 @@ public class BoolLiteral extends PrimaryNode {
     public boolean getValue() {
         return value;
     }
-
-    @Override
-    public void printNode(int depth) {
-        String indent = "  ".repeat(depth);
-        System.out.println(value);
-    }
 }

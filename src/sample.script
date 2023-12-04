@@ -1,21 +1,18 @@
-type Triangle is record
-    var side1: real;
-    var side2: real;
-    var side3: real;
-end
-
-routine is_right_triangle(t: Triangle) is
-    var a: real is t.side1;
-    var b: real is t.side2;
-    var c: real is t.side3;
-    if a*a + b*b = c*c then
-        writeln(true);
-    else
-        writeln(false);
-    end;
-end
-var my_triangle: Triangle;
-my_triangle.side1 := 3.0;
-my_triangle.side2 := 4.0;
-my_triangle.side3 := 5.0;
-is_right_triangle(my_triangle);
+type numbers is array[5] integer;
+numbers[1] := 10
+numbers[2] := 20
+numbers[3] := 30 + 234*12
+numbers[4] := 40
+numbers[5] := 50
+var target: integer is 30;
+var found: boolean is false;
+for i in 1..5 loop
+if numbers[i] = target then
+found := true;
+end;
+end;
+if found then
+write(true);
+else
+write(false);
+end;

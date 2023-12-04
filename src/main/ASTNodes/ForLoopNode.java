@@ -28,8 +28,4 @@ public class ForLoopNode extends ASTNode implements StatementNode {
         return body;
     }
 
-    @Override
-    public void printNode(int depth) {
-
-    }
 }

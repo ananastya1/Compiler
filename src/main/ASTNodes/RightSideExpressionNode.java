@@ -15,9 +15,4 @@ public class RightSideExpressionNode extends ASTNode {
     public RelationNode getRelation() {
         return relation;
     }
-
-    @Override
-    public void printNode(int depth) {
-
-    }
 }

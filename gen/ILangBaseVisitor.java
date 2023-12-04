@@ -1,4 +1,4 @@
-// Generated from /Users/shredding/ALL MY/Inno/Year 3/compilier new/Compiler/src/grammar/ILang.g4 by ANTLR 4.13.1
+// Generated from C:/Users/admin/Desktop/Compiler/src/grammar/ILang.g4 by ANTLR 4.13.1
 import org.antlr.v4.runtime.tree.AbstractParseTreeVisitor;
 
 /**
@@ -199,14 +199,14 @@ public class ILangBaseVisitor<T> extends AbstractParseTreeVisitor<T> implements 
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitFactor(ILangParser.FactorContext ctx) { return visitChildren(ctx); }
+	@Override public T visitSummand(ILangParser.SummandContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitSummand(ILangParser.SummandContext ctx) { return visitChildren(ctx); }
+	@Override public T visitFactor(ILangParser.FactorContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *

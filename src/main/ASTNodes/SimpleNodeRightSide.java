@@ -1,23 +1,19 @@
 public class SimpleNodeRightSide extends ASTNode {
-    private FactorOperator operator = null;
-    private FactorNode rightOperand = null;
 
-    public SimpleNodeRightSide(FactorOperator operator, FactorNode rightOperand, int lineNumber) {
+    private SummandOperator operator = null;
+    private SummandNode rightOperand = null;
+
+    public SimpleNodeRightSide(SummandOperator operator, SummandNode rightOperand, int lineNumber) {
         super("SimpleNodeRightSide", lineNumber);
         this.operator = operator;
         this.rightOperand = rightOperand;
     }
 
-    public FactorOperator getOperator() {
+    public SummandOperator getOperator() {
         return operator;
     }
 
-    public FactorNode getRightOperand() {
+    public SummandNode getRightOperand() {
         return rightOperand;
-    }
-
-    @Override
-    public void printNode(int depth) {
-
     }
 }

@@ -12,13 +12,13 @@ public class LexerTest {
     public static void main(String[] args) throws Exception {
         String content = readFile("src/sample.script");
         CharStream input = CharStreams.fromString(content);
-        IlangCodeGenerationLexer lexer = new IlangCodeGenerationLexer(input);
+        ILangLexer lexer = new ILangLexer(input);
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         ObjectMapper mapper = new ObjectMapper();
 
         for (Token token = tokens.LT(1); token.getType() != Token.EOF; token = tokens.LT(1)) {
             TokenObject tokenObject = new TokenObject(
-                    IlangCodeGenerationLexer.VOCABULARY.getSymbolicName(token.getType()),
+                    ILangLexer.VOCABULARY.getSymbolicName(token.getType()),
                     token.getText(),
                     token.getLine(),
                     token.getStartIndex(),

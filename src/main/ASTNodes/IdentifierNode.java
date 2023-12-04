@@ -10,9 +10,4 @@ public class IdentifierNode extends ASTNode{ //extends TypeNode implements Node 
         return identifier;
     }
 
-    @Override
-    public void printNode(int depth) {
-        String indent = "  ".repeat(depth);
-        System.out.println(identifier);
-    }
 }

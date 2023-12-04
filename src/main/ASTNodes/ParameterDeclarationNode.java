@@ -16,8 +16,4 @@ public class ParameterDeclarationNode extends ASTNode {
         return type;
     }
 
-    @Override
-    public void printNode(int depth) {
-
-    }
 }

@@ -31,8 +31,4 @@ public class RelationNode extends ExpressionNode {
         return rightOperand;
     }
 
-    @Override
-    public void printNode(int depth) {
-
-    }
 }

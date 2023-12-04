@@ -10,9 +10,4 @@
 //        return typeKeyword;
 //    }
 //
-//    @Override
-//    public void printNode(int depth) {
-//        String indent = "  ".repeat(depth);
-//        System.out.println(this.typeKeyword.toString());
-//    }
 //}

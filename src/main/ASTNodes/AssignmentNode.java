@@ -16,13 +16,4 @@ public class AssignmentNode extends ASTNode implements StatementNode {
         return expression;
     }
 
-    @Override
-    public void printNode(int depth) {
-        String indent = "  ".repeat(depth);
-        System.out.println(this.label);
-        System.out.print(indent + "|__");
-        modifiablePrimary.printNode(depth + 1);
-        System.out.print(indent + "|__");
-        expression.printNode(depth + 1);
-    }
 }

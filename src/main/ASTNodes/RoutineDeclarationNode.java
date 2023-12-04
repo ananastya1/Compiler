@@ -39,15 +39,10 @@ public class RoutineDeclarationNode extends ASTNode {
         return variables;
     }
 
-    public void putVariable(String name ,TypeClass type){
+    public void putVariable(String name, TypeClass type){
         this.variables.put(name, type);
     }
     public void removeVariable(String name){
         this.variables.remove(name);
-    }
-
-    @Override
-    public void printNode(int depth) {
-
     }
 }
