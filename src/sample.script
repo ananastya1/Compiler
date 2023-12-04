@@ -1,21 +1,26 @@
-type Triangle is record
-    var side1: real;
-    var side2: real;
-    var side3: real;
+type arr is array[10] integer
+
+var n: integer is 3;
+
+for i in 1..n loop
+  var tempInput:integer is input(integer)
+  arr[i] :=  tempInput
 end
 
-routine is_right_triangle(t: Triangle) is
-    var a: real is t.side1;
-    var b: real is t.side2;
-    var c: real is t.side3;
-    if a*a + b*b = c*c then
-        writeln(true);
-    else
-        writeln(false);
-    end;
+
+for i in 1..n - 1 loop
+    for j in 1..n - i - 1 loop
+        if arr[j] > arr[j + 1] then
+            var temp: integer is arr[j];
+            arr[j] := arr[j + 1];
+            arr[j + 1] := temp;
+        end;
+    end
 end
-var my_triangle: Triangle;
-my_triangle.side1 := 3.0;
-my_triangle.side2 := 4.0;
-my_triangle.side3 := 5.0;
-is_right_triangle(my_triangle);
+
+//use 1 var or 2 var
+
+//1 var
+for i in 1..n loop
+  writes(arr[i]);
+end
