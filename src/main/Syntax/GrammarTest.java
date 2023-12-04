@@ -12,9 +12,9 @@ public class GrammarTest {
 
         String content = readFile("src/sample.script");
         CharStream input = CharStreams.fromString(content);
-        ILangLexer lexer = new ILangLexer(input);
+        IlangCodeGenerationLexer lexer = new IlangCodeGenerationLexer(input);
         CommonTokenStream tokens = new CommonTokenStream(lexer);
-        ILangParser parser = new ILangParser(tokens);
+        IlangCodeGenerationParser parser = new IlangCodeGenerationParser(tokens);
 
         ParseTree tree = parser.main();
         System.out.println(tree.toStringTree());
