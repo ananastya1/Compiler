@@ -714,15 +714,12 @@ public class SemanticsVisitor extends ILangBaseVisitor<ASTNode> {
     @Override
     public ASTNode visitExpression(ILangParser.ExpressionContext ctx) {
 
-        RelationNode leftSide = (RelationNode) visit(ctx.relation(0) );
+        visit(ctx.relation(0) );
 
-        List<RightSideExpressionNode> rightSide = new ArrayList<>();
 
         for (int i = 1; i < ctx.relation().size(); i++) {
-            LogicalOperator operator = determineLogicalOperator(ctx, i - 1);
-            RelationNode nextRelation = (RelationNode) visit(ctx.relation(i));
-            RightSideExpressionNode element = new RightSideExpressionNode(nextRelation, ctx.getStart().getLine());
-            rightSide.add(element);
+            determineLogicalOperator(ctx, i - 1);
+            visit(ctx.relation(i));
         }
 
         return new ExpressionNode(ctx.getStart().getLine());
@@ -749,11 +746,11 @@ public class SemanticsVisitor extends ILangBaseVisitor<ASTNode> {
      */
     @Override
     public ASTNode visitRelation(ILangParser.RelationContext ctx) {
-        SimpleNode first = (SimpleNode) visit(ctx.simple(0));
+        visit(ctx.simple(0));
 
         if (ctx.simple(1) != null){
-            ComparisonOperator operator = determineComparisonOperator(ctx);
-            SimpleNode nextSimple = (SimpleNode) visit(ctx.simple(1));
+            determineComparisonOperator(ctx);
+            visit(ctx.simple(1));
             return new RelationNode(ctx.getStart().getLine());
         }
         return new RelationNode(ctx.getStart().getLine());
@@ -786,17 +783,9 @@ public class SemanticsVisitor extends ILangBaseVisitor<ASTNode> {
      */
     @Override
     public ASTNode visitSummand(ILangParser.SummandContext ctx) {
-        FactorNode leftSide = (FactorNode) visit(ctx.factor(0));
-
-        List<SummandNodeRightSide> rightSide = new ArrayList<>();
-
+        visit(ctx.factor(0));
         for (int i = 1; i < ctx.factor().size(); i++) {
-            FactorOperator operator = ctx.MUL(i - 1) != null ? FactorOperator.MUL :
-                    ctx.DIV(i - 1) != null ? FactorOperator.DIV :
-                            ctx.MOD(i - 1) != null ? FactorOperator.MOD : null;
-
-            FactorNode nextFactor = (FactorNode) visit(ctx.factor(i));
-            rightSide.add(new SummandNodeRightSide(ctx.getStart().getLine()));
+            visit(ctx.factor(i));
         }
 
         return new SummandNode(ctx.getStart().getLine() );
@@ -810,13 +799,10 @@ public class SemanticsVisitor extends ILangBaseVisitor<ASTNode> {
      */
     @Override
     public ASTNode visitSimple(ILangParser.SimpleContext ctx) {
-        SummandNode leftSide = (SummandNode) visit(ctx.summand(0));
-        List<SimpleNodeRightSide> rightSide = new ArrayList<>();
+        visit(ctx.summand(0));
 
         for (int i = 1; i < ctx.summand().size(); i++) {
-            SummandOperator operator = ctx.PLUS(i - 1) != null ? SummandOperator.PLUS : SummandOperator.MINUS;
-            SummandNode nextSummand = (SummandNode) visit(ctx.summand(i));
-            rightSide.add(new SimpleNodeRightSide(ctx.getStart().getLine()));
+            visit(ctx.summand(i));
         }
 
         return new SimpleNode(ctx.getStart().getLine());
@@ -849,23 +835,9 @@ public class SemanticsVisitor extends ILangBaseVisitor<ASTNode> {
     public ASTNode visitPrimary(ILangParser.PrimaryContext ctx) {
 
         if (ctx.IntegerLiteral() != null){
-            String intString = "";
-            if (ctx.sign() != null){
-                intString += ctx.sign().getText();
-            }
-            intString += ctx.IntegerLiteral().toString();
-
-            int integerLiteral = Integer.parseInt(intString);
-
             return new IntegerLiteralNode(ctx.getStart().getLine());
 
         } else if (ctx.RealLiteral() != null){
-            String doubleString = "";
-            if (ctx.sign() != null){
-                doubleString += ctx.sign().getText();
-            }
-            doubleString += ctx.RealLiteral().toString();
-            double doubleLiteral = Double.parseDouble(doubleString);
 
             return new RealLiteralNode(ctx.getStart().getLine());
 
@@ -909,23 +881,6 @@ public class SemanticsVisitor extends ILangBaseVisitor<ASTNode> {
 
         if (HelperStore.typeAnalysis.analyzeModifiablePrimary(ctx) == null) {
             HelperStore.throwException(ctx.getStart().getLine(), "Variable '"+ctx.Identifier(0).getText()+"' does not exist");
-        }
-
-        List<ModifiablePrimaryRightPartNode> right = new ArrayList<>();
-
-        for (int i = 1; i < ctx.getChildCount(); i++) {
-
-            if (ctx.getChild(i).getText().equals(".") || ctx.getChild(i).getText().equals("]") ||ctx.getChild(i).getText().equals("[") ){
-                continue;
-            }
-
-            if (ctx.getChild(i) instanceof ILangParser.ExpressionContext){
-                ModifiablePrimaryRightPartNode element = new ModifiablePrimaryRightPartNode(ctx.getStart().getLine());
-                right.add(element);
-            }else{
-                ModifiablePrimaryRightPartNode element = new ModifiablePrimaryRightPartNode(ctx.getStart().getLine());
-                right.add(element);
-            }
         }
 
         return new ModifiablePrimaryNode(identifier,ctx.getStart().getLine());
