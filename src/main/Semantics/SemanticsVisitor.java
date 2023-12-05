@@ -1,9 +1,7 @@
 import org.antlr.v4.runtime.tree.ParseTree;
-
-import java.lang.reflect.Array;
 import java.util.*;
 
-public class Visitor extends ILangBaseVisitor<ASTNode> {
+public class SemanticsVisitor extends ILangBaseVisitor<ASTNode> {
 
 
     /**

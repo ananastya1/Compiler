@@ -25,29 +25,31 @@ public class JasminCompiler {
             }
         }
 
-        CodeGenTest.main(args);
+        CodeGeneration.main(args);
 
         File jasminDir = new File("src/JasminFiles");
         File[] files = jasminDir.listFiles((dir, name) -> name.endsWith(".j")); // Assuming .j is the extension
+        if (files != null){
+            for (File file : files) {
+                try {
+                    // Construct the jasmin command
+                    String command = "jasmin " + "src/JasminFiles/" + file.getName() + " -d src/JasminFiles/JavaClasses";
 
-        for (File file : files) {
-            try {
-                // Construct the jasmin command
-                String command = "jasmin " + "src/JasminFiles/" + file.getName() + " -d src/JasminFiles/JavaClasses";
+                    // Execute the jasmin command
+                    Process jasminProcess = Runtime.getRuntime().exec(command);
 
-                // Execute the jasmin command
-                Process jasminProcess = Runtime.getRuntime().exec(command);
+                    // Wait for the jasmin process to complete
+                    jasminProcess.waitFor();
 
-                // Wait for the jasmin process to complete
-                jasminProcess.waitFor();
-
-                // Construct the java command
+                    // Construct the java command
 
 
-            } catch (IOException | InterruptedException e) {
-                e.printStackTrace();
+                } catch (IOException | InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
         }
+
 
         ProcessBuilder processBuilder = new ProcessBuilder("java", "-cp", "src/JasminFiles/JavaClasses", "MainClass");
         processBuilder.redirectErrorStream(true); // объединение stdout и stderr

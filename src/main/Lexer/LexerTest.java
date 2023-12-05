@@ -1,19 +1,12 @@
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.antlr.v4.runtime.CharStream;
-import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.Token;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-
 public class LexerTest {
     public static void main(String[] args) throws Exception {
-        String content = readFile("src/sample.script");
-        CharStream input = CharStreams.fromString(content);
-        ILangLexer lexer = new ILangLexer(input);
-        CommonTokenStream tokens = new CommonTokenStream(lexer);
+        String content = GeneralHelper.readFile("src/sample.script");
+        CommonTokenStream tokens = GeneralHelper.getTokens(content);
+
         ObjectMapper mapper = new ObjectMapper();
 
         for (Token token = tokens.LT(1); token.getType() != Token.EOF; token = tokens.LT(1)) {
@@ -31,10 +24,6 @@ public class LexerTest {
         }
     }
 
-    private static String readFile(String path) throws IOException {
-        byte[] encoded = Files.readAllBytes(Paths.get(path));
-        return new String(encoded);
-    }
 }
 
 class TokenObject {

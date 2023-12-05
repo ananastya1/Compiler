@@ -4,7 +4,7 @@ public enum Type {
     REAL("real"),
     RECORD("record"),
     ARRAY("array");
-    private String stringRepresentation;
+    private final String stringRepresentation;
 
     Type(String stringRepresentation) {
         this.stringRepresentation = stringRepresentation;

@@ -1,6 +1,6 @@
 public class TypeClass {
     private String name = null;
-    private Type type = null;
+    private Type type;
 
     public TypeClass(Type type) {
         this.type = type;
