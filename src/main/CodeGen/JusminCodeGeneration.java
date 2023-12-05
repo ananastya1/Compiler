@@ -395,51 +395,56 @@ public class JusminCodeGeneration extends ILangBaseVisitor<String>{
         String nodeType = "";
         int dimension = 0;
 
-        if (arrayType.equals("I")){
-            dimension = 1;
-            arrayNewType = "int";
-            nodeType = "I";
-        }else if (arrayType.equals("F")){
-            dimension = 1;
-            arrayNewType = "float";
-            nodeType = "F";
-        }else if (arrayType.equals("Z")){
-            dimension = 1;
-            arrayNewType = "boolean";
-            nodeType = "Z";
+        switch (arrayType) {
+            case "I":
+                dimension = 1;
+                arrayNewType = "int";
+                nodeType = "I";
+                break;
+            case "F":
+                dimension = 1;
+                arrayNewType = "float";
+                nodeType = "F";
+                break;
+            case "Z":
+                dimension = 1;
+                arrayNewType = "boolean";
+                nodeType = "Z";
 
-        }else{
-            if (CodeGenHelper.scope != null){
-                RoutineJasminNode routine = CodeGenHelper.routineNodes.get(CodeGenHelper.scope);
+                break;
+            default:
+                if (CodeGenHelper.scope != null) {
+                    RoutineJasminNode routine = CodeGenHelper.routineNodes.get(CodeGenHelper.scope);
 
-                if (routine.arrays.get(arrayType) != null){
-                    ArrayJasminNode arr = routine.arrays.get(arrayType);
-                    dimension = arr.dimension + 1;
-                    arrayNewType = arr.type;
-                    nodeType = arr.type;
-                    sizes = arr.sizes;
-                }else if (CodeGenHelper.recordNodes.get(arrayType) != null){
-                    isRecordArray = true;
-                    dimension = 1;
-                    arrayNewType = arrayType;
-                    nodeType = "L" + arrayType + ";";
+                    if (routine.arrays.get(arrayType) != null) {
+                        ArrayJasminNode arr = routine.arrays.get(arrayType);
+                        dimension = arr.dimension + 1;
+                        arrayNewType = arr.type;
+                        nodeType = arr.type;
+                        sizes = arr.sizes;
+                    } else if (CodeGenHelper.recordNodes.get(arrayType) != null) {
+                        isRecordArray = true;
+                        dimension = 1;
+                        arrayNewType = arrayType;
+                        nodeType = "L" + arrayType + ";";
 
+                    }
+                } else {
+                    if (CodeGenHelper.arrays.get(arrayType) != null) {
+                        ArrayJasminNode arr = CodeGenHelper.arrays.get(arrayType);
+                        dimension = arr.dimension + 1;
+                        arrayNewType = arr.type;
+                        nodeType = arr.type;
+                        sizes = arr.sizes;
+
+                    } else if (CodeGenHelper.recordNodes.get(arrayType) != null) {
+                        isRecordArray = true;
+                        dimension = 1;
+                        arrayNewType = arrayType;
+                        nodeType = "L" + arrayType + ";";
+                    }
                 }
-            }else{
-                if (CodeGenHelper.arrays.get(arrayType) != null){
-                    ArrayJasminNode arr = CodeGenHelper.arrays.get(arrayType);
-                    dimension = arr.dimension + 1;
-                    arrayNewType = arr.type;
-                    nodeType = arr.type;
-                    sizes = arr.sizes;
-
-                }else if (CodeGenHelper.recordNodes.get(arrayType) != null){
-                    isRecordArray = true;
-                    dimension = 1;
-                    arrayNewType = arrayType;
-                    nodeType = "L" + arrayType + ";";
-                }
-            }
+                break;
         }
 
         if (ctx.expression() == null){
@@ -658,7 +663,7 @@ public class JusminCodeGeneration extends ILangBaseVisitor<String>{
 
         String[] rangeCodeSplitted = visit(ctx.range()).split("\n@@@\n");
 
-        int loopVar = 0;
+        int loopVar;
 
         if (CodeGenHelper.scope != null) {
             RoutineJasminNode routine = CodeGenHelper.routineNodes.get(CodeGenHelper.scope);
@@ -937,15 +942,9 @@ public class JusminCodeGeneration extends ILangBaseVisitor<String>{
 
             switch (operator){
 
-                case AND -> {
-                    ExpressionCode.append("iand\n");
-                }
-                case OR -> {
-                    ExpressionCode.append("ior\n");
-                }
-                case XOR -> {
-                    ExpressionCode.append("ixor\n");
-                }
+                case AND -> ExpressionCode.append("iand\n");
+                case OR -> ExpressionCode.append("ior\n");
+                case XOR -> ExpressionCode.append("ixor\n");
             }
         }
 
@@ -988,24 +987,12 @@ public class JusminCodeGeneration extends ILangBaseVisitor<String>{
             }
             switch (operator){
 
-                case LT -> {
-                    RelationCode.append(type.equals(Type.REAL)? "ifge ":"if_icmpge ").append("TrueBranch").append(ctx.getStart().getStartIndex()).append("\n");
-                }
-                case LEQ -> {
-                    RelationCode.append(type.equals(Type.REAL)? "ifgt ":"if_icmpgt ").append("TrueBranch").append(ctx.getStart().getStartIndex()).append("\n");
-                }
-                case GT -> {
-                    RelationCode.append(type.equals(Type.REAL)? "ifle ":"if_icmple ").append("TrueBranch").append(ctx.getStart().getStartIndex()).append("\n");
-                }
-                case GEQ -> {
-                    RelationCode.append(type.equals(Type.REAL)? "iflt ":"if_icmplt ").append("TrueBranch").append(ctx.getStart().getStartIndex()).append("\n");
-                }
-                case EQ -> {
-                    RelationCode.append(type.equals(Type.REAL)? "ifne ":"if_icmpne ").append("TrueBranch").append(ctx.getStart().getStartIndex()).append("\n");
-                }
-                case NEQ -> {
-                    RelationCode.append(type.equals(Type.REAL)? "ifeq ":"if_icmpeq ").append("TrueBranch").append(ctx.getStart().getStartIndex()).append("\n");
-                }
+                case LT -> RelationCode.append(type.equals(Type.REAL)? "ifge ":"if_icmpge ").append("TrueBranch").append(ctx.getStart().getStartIndex()).append("\n");
+                case LEQ -> RelationCode.append(type.equals(Type.REAL)? "ifgt ":"if_icmpgt ").append("TrueBranch").append(ctx.getStart().getStartIndex()).append("\n");
+                case GT -> RelationCode.append(type.equals(Type.REAL)? "ifle ":"if_icmple ").append("TrueBranch").append(ctx.getStart().getStartIndex()).append("\n");
+                case GEQ -> RelationCode.append(type.equals(Type.REAL)? "iflt ":"if_icmplt ").append("TrueBranch").append(ctx.getStart().getStartIndex()).append("\n");
+                case EQ -> RelationCode.append(type.equals(Type.REAL)? "ifne ":"if_icmpne ").append("TrueBranch").append(ctx.getStart().getStartIndex()).append("\n");
+                case NEQ -> RelationCode.append(type.equals(Type.REAL)? "ifeq ":"if_icmpeq ").append("TrueBranch").append(ctx.getStart().getStartIndex()).append("\n");
             }
             String falseBranch = "ldc 1\ngoto EndComparison"+ctx.getStart().getStartIndex()+"\n";
 
@@ -1059,21 +1046,13 @@ public class JusminCodeGeneration extends ILangBaseVisitor<String>{
             String instructionType = "i";
             switch (CodeGenHelper.typeAnalyse.getPrimitiveType(firstSummandType, summandIType)){
 
-                case BOOLEAN, INT -> {
-                    instructionType = "i";
-                }
-                case REAL -> {
-                    instructionType = "f";
-                }
+                case BOOLEAN, INT -> instructionType = "i";
+                case REAL -> instructionType = "f";
             }
 
             switch (operator){
-                case PLUS -> {
-                    FactorCode.append(instructionType).append("add").append("\n");
-                }
-                case MINUS -> {
-                    FactorCode.append(instructionType).append("sub").append("\n");
-                }
+                case PLUS -> FactorCode.append(instructionType).append("add").append("\n");
+                case MINUS -> FactorCode.append(instructionType).append("sub").append("\n");
             }
         }
 
@@ -1100,25 +1079,15 @@ public class JusminCodeGeneration extends ILangBaseVisitor<String>{
             String instructionType = "i";
             switch (CodeGenHelper.typeAnalyse.getPrimitiveType(firstFactorType, factorIType)){
 
-                case BOOLEAN, INT -> {
-                    instructionType = "i";
-                }
-                case REAL -> {
-                    instructionType = "f";
-                }
+                case BOOLEAN, INT -> instructionType = "i";
+                case REAL -> instructionType = "f";
             }
 
             switch (operator){
 
-                case MUL -> {
-                    SimpleCode.append(instructionType).append("mul").append("\n");
-                }
-                case DIV -> {
-                    SimpleCode.append(instructionType).append("div").append("\n");
-                }
-                case MOD -> {
-                    SimpleCode.append(instructionType).append("rem").append("\n");
-                }
+                case MUL -> SimpleCode.append(instructionType).append("mul").append("\n");
+                case DIV -> SimpleCode.append(instructionType).append("div").append("\n");
+                case MOD -> SimpleCode.append(instructionType).append("rem").append("\n");
             }
 
         }
@@ -1371,7 +1340,7 @@ public class JusminCodeGeneration extends ILangBaseVisitor<String>{
     public String visitWriteStatement(ILangParser.WriteStatementContext ctx) {
         StringBuilder writeCode = new StringBuilder();
         boolean ifExpression = false;
-        String expressionCode = "";
+        String expressionCode;
         String expressionType = "I";
         if (ctx.expression() != null){
             expressionCode = visit(ctx.expression());
@@ -1380,13 +1349,9 @@ public class JusminCodeGeneration extends ILangBaseVisitor<String>{
 
             switch (CodeGenHelper.typeAnalyse.analyzeExpression(ctx.expression())){
 
-                case BOOLEAN -> {
-                    expressionType = "Z";
-                }
+                case BOOLEAN -> expressionType = "Z";
 
-                case REAL -> {
-                    expressionType = "F";
-                }
+                case REAL -> expressionType = "F";
 
             }
         }
@@ -1441,12 +1406,10 @@ public class JusminCodeGeneration extends ILangBaseVisitor<String>{
         inputCode.append("dup\n");
         String type = visit(ctx.type());
 
-        if (type.equals("I")){
-            inputCode.append("invokevirtual java/util/Scanner/nextInt()I\n");
-        }else if (type.equals("Z")){
-            inputCode.append("invokevirtual java/util/Scanner/nextBoolean()Z\n");
-        }else if (type.equals("F")){
-            inputCode.append("invokevirtual java/util/Scanner/nextFloat()F\n");
+        switch (type) {
+            case "I" -> inputCode.append("invokevirtual java/util/Scanner/nextInt()I\n");
+            case "Z" -> inputCode.append("invokevirtual java/util/Scanner/nextBoolean()Z\n");
+            case "F" -> inputCode.append("invokevirtual java/util/Scanner/nextFloat()F\n");
         }
         inputCode.append("swap\n").append("pop\n");
 
