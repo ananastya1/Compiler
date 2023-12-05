@@ -3,15 +3,15 @@ import java.util.HashMap;
 import java.util.List;
 
 public class HelperStore {
-    static String scope = null; // Null - global; "someText" routine someText()...
+    static String scope = null;
     static boolean return_exists = false;
     static boolean isRecordScope = false;
     static boolean isParameterScope = false;
 
-    static List<String> loopVaribles = new ArrayList<>();
+    static List<String> loopVariables = new ArrayList<>();
     static TypeAnalysis typeAnalysis = new TypeAnalysis();
 
-    static HashMap<String,TypeClass> globalVariables = new HashMap<>(); // variables in global scope
+    static HashMap<String,TypeClass> globalVariables = new HashMap<>();
 
     static HashMap<String, RoutineDeclarationNode> routines = new HashMap<>();
     static HashMap<String, RecordType> records = new HashMap<>();
@@ -20,7 +20,7 @@ public class HelperStore {
     static TypeClass inputType = null;
 
     static boolean isLoopVariable(String variableName){
-        return loopVaribles.contains(variableName);
+        return loopVariables.contains(variableName);
     }
 
     static boolean isVariableInRoutineScope(String variableName){
@@ -65,7 +65,7 @@ public class HelperStore {
         scope = null;
         isRecordScope = false;
         isParameterScope = false;
-        loopVaribles.clear();
+        loopVariables.clear();
         typeAnalysis = new TypeAnalysis();
         globalVariables.clear();
         routines.clear();

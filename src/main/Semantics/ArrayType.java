@@ -1,9 +1,9 @@
 import java.util.List;
 
 public class ArrayType {
-    String arrayName = "";
-    TypeClass type = null;
-    int arraySize = 0;
+    String arrayName;
+    TypeClass type;
+    int arraySize;
 
     public ArrayType(String arrayName, TypeClass type, int arraySize) {
         this.arrayName = arrayName;

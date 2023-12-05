@@ -15,13 +15,11 @@ public class Listener extends ILangBaseListener{
         super.enterExpression(ctx);
         try{
             String optimized = optimize(ctx.getText());
-//            System.out.println("optimized " + optimized);
 
             String splitted = ctx.getText().split(">|<|>=|<=|\\+|-|xor|or|and|\\*|=|/|/=")[0];
             try{
                 if(splitted.equals(String.valueOf(Integer.parseInt(splitted)))){
-//                if ((Float.parseFloat(splitted)) ==
-//                        (Float.parseFloat(String.valueOf(Integer.parseInt(splitted))))){
+
                     optimized = String.valueOf((int)(Float.parseFloat(optimized)));
                 }
             }
@@ -29,14 +27,11 @@ public class Listener extends ILangBaseListener{
                 if(Float.parseFloat(optimized)==Float.parseFloat(splitted)){
                     optimized = splitted;
                 }
-//                System.out.println(ignored);
             }
             if (!ctx.getText().equals(optimized)){
                 expressions.put(ctx.getText(), optimized);
             }
-            //System.out.println(ctx.getText() + " - " + optimized);
         } catch (Exception ignored){
-//            System.out.println("Exception :"+ ignored);
         }
     }
 

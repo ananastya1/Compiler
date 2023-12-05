@@ -28,13 +28,13 @@ public class SemanticsVisitor extends ILangBaseVisitor<ASTNode> {
      */
     @Override
     public ASTNode visitProgram(ILangParser.ProgramContext ctx) {
-        if (ctx.simpleDeclaration() != null) { // simpleDeclaration
+        if (ctx.simpleDeclaration() != null) {
             return visit(ctx.simpleDeclaration());
 
-        } else if (ctx.routineDeclaration() != null) { // routineDeclaration
+        } else if (ctx.routineDeclaration() != null) {
             return visit(ctx.routineDeclaration());
 
-        } else if (ctx.statement() != null) { // statement
+        } else if (ctx.statement() != null) {
             return visit(ctx.statement());
         }
         return null;
@@ -69,14 +69,13 @@ public class SemanticsVisitor extends ILangBaseVisitor<ASTNode> {
         IdentifierNode identifier = new IdentifierNode(ctx.Identifier().getText(), ctx.getStart().getLine());
 
         TypeClass type = null;
-        ExpressionNode initialValue = null;
 
         if (ctx.type() != null){
             type = new TypeClass(((TypeNode) visit(ctx.type())).type.getType());
         }
 
         if (ctx.expression() != null){
-            initialValue = (ExpressionNode) visit(ctx.expression());
+            visit(ctx.expression());
             Type analysisType = HelperStore.typeAnalysis.analyzeExpression(ctx.expression());
             if (type == null){
                 type = new TypeClass(analysisType) ;
@@ -85,8 +84,6 @@ public class SemanticsVisitor extends ILangBaseVisitor<ASTNode> {
             }
         }
         HelperStore.inputType = null;
-
-        String a = ctx.getText();
 
         if (!HelperStore.isRecordScope){
             if (HelperStore.isLoopVariable(identifier.getIdentifier())){
@@ -267,8 +264,7 @@ public class SemanticsVisitor extends ILangBaseVisitor<ASTNode> {
             variables.add(variable);
         }
         HelperStore.isRecordScope = false;
-        RecordTypeNode newRecord = new RecordTypeNode(variables, ctx.getStart().getLine());
-        return newRecord;
+        return new RecordTypeNode(variables, ctx.getStart().getLine());
     }
 
     /**
@@ -289,7 +285,7 @@ public class SemanticsVisitor extends ILangBaseVisitor<ASTNode> {
 
         ExpressionNode arraySize = null;
         int arraySizeInt = 0;
-        Type type = null;
+        Type type;
         if (ctx.expression() != null){
             arraySize = (ExpressionNode) visit(ctx.expression());
             try {
@@ -348,7 +344,7 @@ public class SemanticsVisitor extends ILangBaseVisitor<ASTNode> {
         ModifiablePrimaryNode leftSide = (ModifiablePrimaryNode) visit(ctx.modifiablePrimary());
         Type leftSideType = null;
 
-        if (HelperStore.loopVaribles.contains(leftSide.getIdentifier().getIdentifier())){
+        if (HelperStore.loopVariables.contains(leftSide.getIdentifier().getIdentifier())){
             HelperStore.throwException(ctx.getStart().getLine(), "Loop variable should be read-only");
         }
         if (HelperStore.scope!=null) {
@@ -374,7 +370,6 @@ public class SemanticsVisitor extends ILangBaseVisitor<ASTNode> {
         ExpressionNode rightSide = (ExpressionNode) visit(ctx.expression());
         Type rightSideType = HelperStore.typeAnalysis.analyzeExpression(ctx.expression());
         HelperStore.inputType = null;
-        // возиожно временная заглушка
 
         if (leftSideType.equals(Type.INT) || leftSideType.equals(Type.BOOLEAN) || leftSideType.equals(Type.REAL)){
             Type analizedCast = HelperStore.typeAnalysis.getPrimitiveType(leftSideType, rightSideType);
@@ -412,11 +407,8 @@ public class SemanticsVisitor extends ILangBaseVisitor<ASTNode> {
 
         if (HelperStore.routines.get(ctx.Identifier().getText()) == null){
             HelperStore.throwException(ctx.getStart().getLine(), "Routine "+ctx.Identifier().getText()+"does not exist");
-//            return null;
         }else{
-            IdentifierNode functionName = new IdentifierNode(ctx.Identifier().getText(), ctx.getStart().getLine());
 
-            List<ExpressionNode> arguments = new ArrayList<>();
             List<ParameterDeclarationNode> routineParameters = HelperStore.routines.get(ctx.Identifier().getText()).getParameters();
 
             if (ctx.expression().size() != routineParameters.size()){
@@ -427,7 +419,7 @@ public class SemanticsVisitor extends ILangBaseVisitor<ASTNode> {
                     if (!routineParameters.get(i).getType().type.getType().equals(argumentType)){
                         HelperStore.throwException(ctx.getStart().getLine(), "Type of argument does not correspond to type of routine's parameter");
                     }
-                    arguments.add((ExpressionNode) visit(ctx.expression(i)));
+                    visit(ctx.expression(i));
                 }
             }
 
@@ -450,8 +442,7 @@ public class SemanticsVisitor extends ILangBaseVisitor<ASTNode> {
         if (ctx.writeStatement() != null) {
             return visit(ctx.writeStatement());
         } else if (ctx.inputStatement() != null) {
-            ASTNode input = visit(ctx.inputStatement());
-            return input;
+            return visit(ctx.inputStatement());
 
         }
 
@@ -484,7 +475,6 @@ public class SemanticsVisitor extends ILangBaseVisitor<ASTNode> {
     @Override
     public ASTNode visitForLoop(ILangParser.ForLoopContext ctx) {
         IdentifierNode loopVariable = new IdentifierNode(ctx.Identifier().getText(), ctx.getStart().getLine());
-        boolean isReverse = ctx.REVERSE() != null;
 
         if (HelperStore.isLoopVariable(loopVariable.getIdentifier())){
             HelperStore.throwException(ctx.getStart().getLine(),loopVariable.getIdentifier()+" already exists");
@@ -499,14 +489,14 @@ public class SemanticsVisitor extends ILangBaseVisitor<ASTNode> {
         }
 
         RangeNode range = (RangeNode) visit(ctx.range());
-        HelperStore.loopVaribles.add(loopVariable.getIdentifier());
+        HelperStore.loopVariables.add(loopVariable.getIdentifier());
         if (HelperStore.scope != null){
             HelperStore.routines.get(HelperStore.scope).putVariable(loopVariable.getIdentifier(), new TypeClass(Type.INT));
         }else{
             HelperStore.globalVariables.put(loopVariable.getIdentifier(), new TypeClass(Type.INT));
         }
         BodyNode loopBody = (BodyNode) visit(ctx.body());
-        HelperStore.loopVaribles.remove(HelperStore.loopVaribles.size() - 1);
+        HelperStore.loopVariables.remove(HelperStore.loopVariables.size() - 1);
         if (HelperStore.scope != null){
             HelperStore.routines.get(HelperStore.scope).removeVariable(loopVariable.getIdentifier());
         }else{
@@ -525,8 +515,8 @@ public class SemanticsVisitor extends ILangBaseVisitor<ASTNode> {
      */
     @Override
     public ASTNode visitRange(ILangParser.RangeContext ctx) {
-        ExpressionNode startValue = (ExpressionNode) visit(ctx.expression(0));
-        ExpressionNode endValue = (ExpressionNode) visit(ctx.expression(1));
+        visit(ctx.expression(0));
+        visit(ctx.expression(1));
 
         if (!(HelperStore.typeAnalysis.analyzeExpression(ctx.expression(0)).equals(Type.INT) && HelperStore.typeAnalysis.analyzeExpression(ctx.expression(1)).equals(Type.INT))){
             HelperStore.throwException(ctx.getStart().getLine(), "Range should consist of two integer numbers");
@@ -543,16 +533,14 @@ public class SemanticsVisitor extends ILangBaseVisitor<ASTNode> {
      */
     @Override
     public ASTNode visitIfStatement(ILangParser.IfStatementContext ctx) {
-        ExpressionNode condition = (ExpressionNode) visit(ctx.expression());
+        visit(ctx.expression());
         if (!HelperStore.typeAnalysis.analyzeExpression(ctx.expression()).equals(Type.BOOLEAN)){
             HelperStore.throwException(ctx.getStart().getLine(), "Type of condition should be boolean");
         }
 
-        BodyNode ifBody = (BodyNode) visit(ctx.body(0));
-        BodyNode elseBody = null;
+        visit(ctx.body(0));
         if (ctx.body(1) != null) {
-            elseBody = (BodyNode) visit(ctx.body(1));
-
+            visit(ctx.body(1));
         }
 
         return new IfStatementNode(ctx.getStart().getLine() );
@@ -667,59 +655,17 @@ public class SemanticsVisitor extends ILangBaseVisitor<ASTNode> {
      */
     @Override
     public ASTNode visitBody(ILangParser.BodyContext ctx) {
-        List<OneLineBodyNode> lines = new ArrayList<>();
         for (ParseTree child : ctx.children) {
 
             if (child instanceof ILangParser.SimpleDeclarationContext) {
-                OneLineBodyNode line = new OneLineBodyNode(
-                        (SimpleDeclarationNode) visit(child),
-                        ctx.getStart().getLine());
-                lines.add(line);
+                visit(child);
             } else if (child instanceof ILangParser.StatementContext) {
-                    ASTNode visited = visit(child);
-                if ( visited instanceof AssignmentNode ){
-                    OneLineBodyNode line = new OneLineBodyNode(
-                            (AssignmentNode) visited,
-                            ctx.getStart().getLine());
-
-                    lines.add(line);
-                } else if ( visited instanceof RoutineCallNode ){
-                    OneLineBodyNode line = new OneLineBodyNode(
-                            (RoutineCallNode) visited,
-                            ctx.getStart().getLine());
-
-                    lines.add(line);
-                } else if ( visited instanceof WhileLoopNode ){
-                    OneLineBodyNode line = new OneLineBodyNode(
-                            (WhileLoopNode) visited,
-                            ctx.getStart().getLine());
-
-                    lines.add(line);
-                } else if ( visited instanceof ForLoopNode ){
-                    OneLineBodyNode line = new OneLineBodyNode(
-                            (ForLoopNode) visited,
-                            ctx.getStart().getLine());
-
-                    lines.add(line);
-                } else if ( visited instanceof IfStatementNode ){
-                    OneLineBodyNode line = new OneLineBodyNode(
-                            (IfStatementNode) visited,
-                            ctx.getStart().getLine());
-
-                    lines.add(line);
-                }
-
-
-
+                visit(child);
             } else if (child instanceof ILangParser.ReturnStatementContext) {
-                OneLineBodyNode line = new OneLineBodyNode(
-                        (ReturnStatementNode) visit(child),
-                        ctx.getStart().getLine());
-                lines.add(line);
+                visit(child);
                 HelperStore.return_exists = true;
 
             }
-
 
         }
 

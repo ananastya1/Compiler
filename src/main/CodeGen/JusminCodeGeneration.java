@@ -23,12 +23,10 @@ public class JusminCodeGeneration extends ILangBaseVisitor<String>{
         CodeGenHelper.mainCode.append("\t.var 0 is args [Ljava/lang/String;\n\n");
 
 
-        // Генерация кода для обхода дочерних узлов
         for (ILangParser.ProgramContext programContext : ctx.program()) {
             CodeGenHelper.mainCode.append(visit(programContext));
         }
 
-        // Генерация завершающих инструкций метода main
         CodeGenHelper.mainCode.append("\n\treturn\n");
         CodeGenHelper.mainCode.append(".end method\n");
 
@@ -46,13 +44,13 @@ public class JusminCodeGeneration extends ILangBaseVisitor<String>{
     @Override
     public String visitProgram(ILangParser.ProgramContext ctx) {
 
-        if (ctx.simpleDeclaration() != null) { // simpleDeclaration
+        if (ctx.simpleDeclaration() != null) {
             return visit(ctx.simpleDeclaration());
 
-        } else if (ctx.routineDeclaration() != null) { // routineDeclaration
+        } else if (ctx.routineDeclaration() != null) {
             return visit(ctx.routineDeclaration());
 
-        } else if (ctx.statement() != null) { // statement
+        } else if (ctx.statement() != null) {
             return visit(ctx.statement());
         }
         return null;
@@ -101,11 +99,7 @@ public class JusminCodeGeneration extends ILangBaseVisitor<String>{
             }
         }
 
-//        if(identifier.equals("i")){
-//            System.out.println("123");
-//        }
         StringBuilder newVariable = new StringBuilder();
-        // TODO recordScope in routine (мб не делаем)
         if (CodeGenHelper.recordScope != null){
             RecordJasminNode recordNode = CodeGenHelper.recordNodes.get(CodeGenHelper.recordScope);
 
@@ -172,7 +166,6 @@ public class JusminCodeGeneration extends ILangBaseVisitor<String>{
             return "";
         }
 
-        // TODO аналайз
         String localVariable = "";
         RoutineJasminNode routine = CodeGenHelper.routineNodes.get(CodeGenHelper.scope);
         routine.numOfLocalVariables += 1;
@@ -267,14 +260,6 @@ public class JusminCodeGeneration extends ILangBaseVisitor<String>{
 
             CodeGenHelper.recordScope = ctx.Identifier().getText();
             RecordJasminNode newRecordNode = new RecordJasminNode(ctx.Identifier().getText());
-
-//            if (CodeGenHelper.scope != null){
-//                RoutineJasminNode routine = CodeGenHelper.routineNodes.get(CodeGenHelper.scope);
-//                routine.recordNodes.put(ctx.Identifier().getText(),newRecordNode);
-//
-//                RecordJasminNode nodeAfterFilling = routine.recordNodes.get(ctx.Identifier().getText());
-//
-//            }
 
             CodeGenHelper.recordNodes.put(ctx.Identifier().getText(),newRecordNode);
 
@@ -607,7 +592,6 @@ public class JusminCodeGeneration extends ILangBaseVisitor<String>{
         String routineName = ctx.Identifier().getText();
         RoutineJasminNode routineNode = CodeGenHelper.routineNodes.get(routineName);
 
-        // load parameters
         StringBuilder loadParameters = new StringBuilder();
         for (int i = 0; i < ctx.expression().size(); i++){
             loadParameters.append(visit(ctx.expression(i)));
@@ -803,7 +787,6 @@ public class JusminCodeGeneration extends ILangBaseVisitor<String>{
         rotuineCode.append(parameterTypes);
         rotuineCode.append(")");
 
-        // Return type
         String returnType;
         if (ctx.type() != null){
             returnType = visit(ctx.type());
@@ -1311,7 +1294,7 @@ public class JusminCodeGeneration extends ILangBaseVisitor<String>{
                     }
 
                 }else{
-                    if (CodeGenHelper.scope != null){ //TODO invoke records within the routine
+                    if (CodeGenHelper.scope != null){
                         RoutineJasminNode routine = CodeGenHelper.routineNodes.get(CodeGenHelper.scope);
                         if (prevChild==null){
                             modifiablePrimaryCode.append("aload ").append(routine.localVariable.get(ctx.getChild(i).getText()) - 1).append("\n");
@@ -1450,7 +1433,7 @@ public class JusminCodeGeneration extends ILangBaseVisitor<String>{
     @Override
     public String visitInputStatement(ILangParser.InputStatementContext ctx) {
         StringBuilder inputCode = new StringBuilder();
-        // new Scanner
+
         inputCode.append("new java/util/Scanner\n").append("dup\n");
         inputCode.append("getstatic java/lang/System/in Ljava/io/InputStream;\n");
         inputCode.append("invokespecial java/util/Scanner/<init>(Ljava/io/InputStream;)V\n");

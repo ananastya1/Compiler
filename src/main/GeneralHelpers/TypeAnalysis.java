@@ -94,12 +94,13 @@ public class TypeAnalysis {
             if (ctx.getText().contains("input")){
                 String newText = ctx.getText().replaceAll("input", "");
 
-                if (newText.equals("(integer)")){
-                    return Type.INT;
-                }else if(newText.equals("(real)")){
-                    return Type.REAL;
-                }else if(newText.equals("(boolean)")){
-                    return Type.BOOLEAN;
+                switch (newText) {
+                    case "(integer)":
+                        return Type.INT;
+                    case "(real)":
+                        return Type.REAL;
+                    case "(boolean)":
+                        return Type.BOOLEAN;
                 }
             }
 
