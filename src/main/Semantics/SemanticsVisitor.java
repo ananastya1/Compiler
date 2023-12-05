@@ -119,7 +119,6 @@ public class SemanticsVisitor extends ILangBaseVisitor<ASTNode> {
         return new VariableDeclarationNode(
                 identifier,
                 type,
-                initialValue,
                 ctx.getStart().getLine()
         );
 
@@ -170,7 +169,7 @@ public class SemanticsVisitor extends ILangBaseVisitor<ASTNode> {
             HelperStore.arrays.put(newArray.arrayName, newArray);
         }
 
-        return new TypeDeclarationNode(identifier, type, ctx.getStart().getLine());
+        return new TypeDeclarationNode(type, ctx.getStart().getLine());
     }
 
     /**
@@ -432,7 +431,7 @@ public class SemanticsVisitor extends ILangBaseVisitor<ASTNode> {
                 }
             }
 
-            return new RoutineCallNode(functionName, arguments, ctx.getStart().getLine());
+            return new RoutineCallNode(ctx.getStart().getLine());
         }
         return null;
 
@@ -514,7 +513,7 @@ public class SemanticsVisitor extends ILangBaseVisitor<ASTNode> {
             HelperStore.globalVariables.remove(loopVariable.getIdentifier());
         }
 
-        return new ForLoopNode(loopVariable, isReverse, range, loopBody, ctx.getStart().getLine());
+        return new ForLoopNode(range, loopBody, ctx.getStart().getLine());
 
     }
 
@@ -533,7 +532,7 @@ public class SemanticsVisitor extends ILangBaseVisitor<ASTNode> {
             HelperStore.throwException(ctx.getStart().getLine(), "Range should consist of two integer numbers");
         }
 
-        return new RangeNode(startValue, endValue, ctx.getStart().getLine());
+        return new RangeNode(ctx.getStart().getLine());
     }
 
     /**
@@ -556,7 +555,7 @@ public class SemanticsVisitor extends ILangBaseVisitor<ASTNode> {
 
         }
 
-        return new IfStatementNode(condition,ifBody,elseBody,ctx.getStart().getLine() );
+        return new IfStatementNode(ctx.getStart().getLine() );
     }
 
     /**
@@ -584,7 +583,7 @@ public class SemanticsVisitor extends ILangBaseVisitor<ASTNode> {
             returnType = (TypeNode) visit(ctx.type());
         }
 
-        RoutineDeclarationNode routineBeforeBody = new RoutineDeclarationNode(routineName,parameters,returnType,null,ctx.getStart().getLine());
+        RoutineDeclarationNode routineBeforeBody = new RoutineDeclarationNode(parameters,returnType,null,ctx.getStart().getLine());
 
         for (ParameterDeclarationNode parameter : parameters) {
             routineBeforeBody.putVariable(parameter.getParameterName().getIdentifier(), parameter.getType().type);
@@ -600,7 +599,7 @@ public class SemanticsVisitor extends ILangBaseVisitor<ASTNode> {
         }
         HelperStore.scope = null;
         HelperStore.return_exists=false;
-        RoutineDeclarationNode routine = new RoutineDeclarationNode(routineName,parameters,returnType,routineBody,ctx.getStart().getLine());
+        RoutineDeclarationNode routine = new RoutineDeclarationNode(parameters,returnType,routineBody,ctx.getStart().getLine());
 
         routine.variables = routineBeforeBody.variables;
         HelperStore.routines.put(routineName.getIdentifier(),routine);
@@ -725,7 +724,7 @@ public class SemanticsVisitor extends ILangBaseVisitor<ASTNode> {
         }
 
 
-        return new BodyNode(lines, ctx.getStart().getLine());
+        return new BodyNode(ctx.getStart().getLine());
 
     }
 
@@ -776,11 +775,11 @@ public class SemanticsVisitor extends ILangBaseVisitor<ASTNode> {
         for (int i = 1; i < ctx.relation().size(); i++) {
             LogicalOperator operator = determineLogicalOperator(ctx, i - 1);
             RelationNode nextRelation = (RelationNode) visit(ctx.relation(i));
-            RightSideExpressionNode element = new RightSideExpressionNode(operator,nextRelation, ctx.getStart().getLine());
+            RightSideExpressionNode element = new RightSideExpressionNode(nextRelation, ctx.getStart().getLine());
             rightSide.add(element);
         }
 
-        return new ExpressionNode(leftSide, rightSide, ctx.getStart().getLine());
+        return new ExpressionNode(ctx.getStart().getLine());
 
     }
 
@@ -809,9 +808,9 @@ public class SemanticsVisitor extends ILangBaseVisitor<ASTNode> {
         if (ctx.simple(1) != null){
             ComparisonOperator operator = determineComparisonOperator(ctx);
             SimpleNode nextSimple = (SimpleNode) visit(ctx.simple(1));
-            return new RelationNode(first,operator,nextSimple, ctx.getStart().getLine());
+            return new RelationNode(ctx.getStart().getLine());
         }
-        return new RelationNode(first, ctx.getStart().getLine());
+        return new RelationNode(ctx.getStart().getLine());
 
     }
 
@@ -851,10 +850,10 @@ public class SemanticsVisitor extends ILangBaseVisitor<ASTNode> {
                             ctx.MOD(i - 1) != null ? FactorOperator.MOD : null;
 
             FactorNode nextFactor = (FactorNode) visit(ctx.factor(i));
-            rightSide.add(new SummandNodeRightSide(operator, nextFactor, ctx.getStart().getLine()));
+            rightSide.add(new SummandNodeRightSide(ctx.getStart().getLine()));
         }
 
-        return new SummandNode(leftSide, rightSide, ctx.getStart().getLine() );
+        return new SummandNode(ctx.getStart().getLine() );
     }
 
     /**
@@ -871,10 +870,10 @@ public class SemanticsVisitor extends ILangBaseVisitor<ASTNode> {
         for (int i = 1; i < ctx.summand().size(); i++) {
             SummandOperator operator = ctx.PLUS(i - 1) != null ? SummandOperator.PLUS : SummandOperator.MINUS;
             SummandNode nextSummand = (SummandNode) visit(ctx.summand(i));
-            rightSide.add(new SimpleNodeRightSide(operator,nextSummand, ctx.getStart().getLine()));
+            rightSide.add(new SimpleNodeRightSide(ctx.getStart().getLine()));
         }
 
-        return new SimpleNode(leftSide, rightSide, ctx.getStart().getLine());
+        return new SimpleNode(ctx.getStart().getLine());
 
     }
 
@@ -912,7 +911,7 @@ public class SemanticsVisitor extends ILangBaseVisitor<ASTNode> {
 
             int integerLiteral = Integer.parseInt(intString);
 
-            return new IntegerLiteralNode(integerLiteral, ctx.getStart().getLine());
+            return new IntegerLiteralNode(ctx.getStart().getLine());
 
         } else if (ctx.RealLiteral() != null){
             String doubleString = "";
@@ -922,13 +921,13 @@ public class SemanticsVisitor extends ILangBaseVisitor<ASTNode> {
             doubleString += ctx.RealLiteral().toString();
             double doubleLiteral = Double.parseDouble(doubleString);
 
-            return new RealLiteralNode(doubleLiteral, ctx.getStart().getLine());
+            return new RealLiteralNode(ctx.getStart().getLine());
 
         } else if (ctx.TRUE() != null){
-            return new BoolLiteral(true, ctx.getStart().getLine());
+            return new BoolLiteral(ctx.getStart().getLine());
 
         }else if (ctx.FALSE() != null){
-            return new BoolLiteral(false, ctx.getStart().getLine());
+            return new BoolLiteral(ctx.getStart().getLine());
 
         }else if (ctx.modifiablePrimary() != null){
             return visit(ctx.modifiablePrimary());
@@ -975,15 +974,15 @@ public class SemanticsVisitor extends ILangBaseVisitor<ASTNode> {
             }
 
             if (ctx.getChild(i) instanceof ILangParser.ExpressionContext){
-                ModifiablePrimaryRightPartNode element = new ModifiablePrimaryRightPartNode((ExpressionNode) visit(ctx.getChild(i)), ctx.getStart().getLine());
+                ModifiablePrimaryRightPartNode element = new ModifiablePrimaryRightPartNode(ctx.getStart().getLine());
                 right.add(element);
             }else{
-                ModifiablePrimaryRightPartNode element = new ModifiablePrimaryRightPartNode(new IdentifierNode(ctx.getChild(i).getText(),ctx.getStart().getLine()), ctx.getStart().getLine());
+                ModifiablePrimaryRightPartNode element = new ModifiablePrimaryRightPartNode(ctx.getStart().getLine());
                 right.add(element);
             }
         }
 
-        return new ModifiablePrimaryNode(identifier,right,ctx.getStart().getLine());
+        return new ModifiablePrimaryNode(identifier,ctx.getStart().getLine());
 
     }
 

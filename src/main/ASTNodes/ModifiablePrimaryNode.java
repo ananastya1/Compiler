@@ -1,23 +1,16 @@
 import java.util.List;
 
 public class ModifiablePrimaryNode extends PrimaryNode {
-    private IdentifierNode identifier;
-    private List<ModifiablePrimaryRightPartNode> accessorList;
+    private final IdentifierNode identifier;
 
-    public ModifiablePrimaryNode(IdentifierNode identifier, List<ModifiablePrimaryRightPartNode> accessorList, int lineNumber) {
+    public ModifiablePrimaryNode(IdentifierNode identifier, int lineNumber) {
         super(lineNumber);
         this.identifier = identifier;
-        this.accessorList = accessorList;
 
     }
 
     public IdentifierNode getIdentifier() {
         return identifier;
     }
-
-    public List<ModifiablePrimaryRightPartNode> getAccessorList() {
-        return accessorList;
-    }
-
 
 }

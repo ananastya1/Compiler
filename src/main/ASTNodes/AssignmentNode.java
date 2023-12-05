@@ -1,6 +1,6 @@
 public class AssignmentNode extends ASTNode implements StatementNode {
-    private ModifiablePrimaryNode modifiablePrimary;
-    private ExpressionNode expression;
+    private final ModifiablePrimaryNode modifiablePrimary;
+    private final ExpressionNode expression;
 
     public AssignmentNode(ModifiablePrimaryNode modifiablePrimary, ExpressionNode expression, int lineNumber) {
         super("Assignment", lineNumber);

@@ -1,5 +1,5 @@
 public class ReturnStatementNode extends ASTNode {
-    private ExpressionNode expression;
+    private final ExpressionNode expression;
 
     public ReturnStatementNode(ExpressionNode expression, int lineNumber) {
         super("ReturnStatement", lineNumber);

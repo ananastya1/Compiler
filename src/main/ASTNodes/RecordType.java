@@ -1,17 +1,12 @@
-import java.util.ArrayList;
 import java.util.List;
 
 public class RecordType {
-    String recordName = "";
-    List<VariableDeclarationNode> variables = new ArrayList<>();
+    String recordName;
+    List<VariableDeclarationNode> variables;
 
     public RecordType(String recordName, List<VariableDeclarationNode> variables) {
         this.recordName = recordName;
         this.variables = variables;
-    }
-
-    public List<VariableDeclarationNode> getVariables() {
-        return variables;
     }
 
     public Type getVariableType(List<String> variables){

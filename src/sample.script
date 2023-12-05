@@ -1,8 +1,21 @@
-var a: boolean is true;
-var b: boolean is false;
-var result1: boolean is a or b;
-var result2: boolean is a and b;
-var result3: boolean is a xor b;
-writeln(result1);
-writeln(result2);
-writeln(result3);
+type arr is array[10] integer
+
+for i in 1..10 loop
+  arr[i] := input(integer)
+end
+
+
+for i in 2..n loop
+    var key: integer is arr[i];
+    var j: integer is i - 1;
+    while j >= 1 loop
+        if arr[j] > key then
+            arr[j + 1] := arr[j];
+        end
+        j := j - 1;
+    end
+    arr[j + 1] := key;
+end
+for i in 1..n loop
+  writes(arr[i]);
+end

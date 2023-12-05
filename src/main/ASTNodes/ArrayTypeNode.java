@@ -1,6 +1,6 @@
 public class ArrayTypeNode extends UserTypeNode implements Node {
-    private TypeNode elementType;
-    private ExpressionNode arraySize;
+    private final TypeNode elementType;
+    private final ExpressionNode arraySize;
     private int arraySizeInt = 0;
 
     public ArrayTypeNode(TypeNode elementType, ExpressionNode arraySize,int arraySizeInt, int lineNumber) {

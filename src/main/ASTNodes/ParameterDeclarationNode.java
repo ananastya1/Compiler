@@ -1,6 +1,6 @@
 public class ParameterDeclarationNode extends ASTNode {
-    private IdentifierNode parameterName;
-    private TypeNode type;
+    private final IdentifierNode parameterName;
+    private final TypeNode type;
 
     public ParameterDeclarationNode(IdentifierNode parameterName, TypeNode type, int lineNumber) {
         super("ParameterDeclaration", lineNumber);

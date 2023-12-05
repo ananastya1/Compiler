@@ -1,14 +1,6 @@
 public class ModifiablePrimaryRightPartNode extends ASTNode {
-    private IdentifierNode identifier;
-    private ExpressionNode expressionNode;
 
-    public ModifiablePrimaryRightPartNode(IdentifierNode identifier, int lineNumber) {
+    public ModifiablePrimaryRightPartNode(int lineNumber) {
         super("ModifiablePrimaryRightPartNode", lineNumber);
-        this.identifier = identifier;
-    }
-
-    public ModifiablePrimaryRightPartNode(ExpressionNode expressionNode, int lineNumber) {
-        super("ModifiablePrimaryRightPartNode", lineNumber);
-        this.expressionNode = expressionNode;
     }
 }

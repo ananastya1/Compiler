@@ -1,6 +1,6 @@
 public class WhileLoopNode extends ASTNode implements StatementNode {
-    private ExpressionNode expression;
-    private BodyNode body;
+    private final ExpressionNode expression;
+    private final BodyNode body;
 
     public WhileLoopNode(ExpressionNode expression, BodyNode body, int lineNumber) {
         super("WhileLoop", lineNumber);

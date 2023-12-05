@@ -1,15 +1,9 @@
 public class RightSideExpressionNode extends ASTNode {
-    private LogicalOperator logicalOperator = null;
-    private RelationNode relation = null;
+    private final RelationNode relation;
 
-    public RightSideExpressionNode(LogicalOperator logicalOperator, RelationNode relation, int lineNumber) {
+    public RightSideExpressionNode(RelationNode relation, int lineNumber) {
         super("RightSideExpressionNode", lineNumber);
-        this.logicalOperator = logicalOperator;
         this.relation = relation;
-    }
-
-    public LogicalOperator getLogicalOperator() {
-        return logicalOperator;
     }
 
     public RelationNode getRelation() {

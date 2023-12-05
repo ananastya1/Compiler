@@ -1,26 +1,17 @@
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class RoutineDeclarationNode extends ASTNode {
-    private IdentifierNode procedureName;
-//    private ParametersNode parameters;
-    private TypeNode returnType;
+    private final TypeNode returnType;
     public HashMap<String, TypeClass> variables = new HashMap<>();
-    private List<ParameterDeclarationNode> parameters = new ArrayList<>();
-    private BodyNode body;
+    private final List<ParameterDeclarationNode> parameters;
+    private final BodyNode body;
 
-    public RoutineDeclarationNode(IdentifierNode procedureName, List<ParameterDeclarationNode> parameters, TypeNode returnType, BodyNode body, int lineNumber) {
+    public RoutineDeclarationNode(List<ParameterDeclarationNode> parameters, TypeNode returnType, BodyNode body, int lineNumber) {
         super("RoutineDeclaration", lineNumber);
-        this.procedureName = procedureName;
         this.parameters = parameters;
         this.returnType = returnType;
         this.body = body;
-    }
-
-    public IdentifierNode getProcedureName() {
-        return procedureName;
     }
 
     public List<ParameterDeclarationNode> getParameters() {

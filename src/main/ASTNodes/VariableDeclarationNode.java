@@ -1,13 +1,11 @@
 public class VariableDeclarationNode extends SimpleDeclarationNode {
-    private IdentifierNode variableName;
-    private TypeClass type;
-    private ExpressionNode initialValue;
+    private final IdentifierNode variableName;
+    private final TypeClass type;
 
-    public VariableDeclarationNode(IdentifierNode variableName, TypeClass type, ExpressionNode initialValue, int lineNumber) {
+    public VariableDeclarationNode(IdentifierNode variableName, TypeClass type, int lineNumber) {
         super("VariableDeclaration", lineNumber);
         this.variableName = variableName;
         this.type = type;
-        this.initialValue = initialValue;
     }
 
     public IdentifierNode getVariableName() {
@@ -16,10 +14,6 @@ public class VariableDeclarationNode extends SimpleDeclarationNode {
 
     public TypeClass getType() {
         return type;
-    }
-
-    public ExpressionNode getInitialValue() {
-        return initialValue;
     }
 
 }

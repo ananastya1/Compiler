@@ -1,6 +1,6 @@
 public class WriteStatementNode extends BuiltInRoutineNode {
-    private ExpressionNode expression;
-    private WriteType type;
+    private final ExpressionNode expression;
+    private final WriteType type;
 
     public WriteStatementNode(WriteType type, ExpressionNode expression, int lineNumber) {
         super("WriteStatement", lineNumber);

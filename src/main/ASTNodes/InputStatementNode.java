@@ -1,5 +1,5 @@
 public class InputStatementNode extends BuiltInRoutineNode {
-    private TypeNode type;
+    private final TypeNode type;
 
     public InputStatementNode(TypeNode type, int lineNumber) {
         super("InputStatement", lineNumber);

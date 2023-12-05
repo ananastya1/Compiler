@@ -1,5 +1,5 @@
-public class IdentifierNode extends ASTNode{ //extends TypeNode implements Node {
-    private String identifier;
+public class IdentifierNode extends ASTNode{
+    private final String identifier;
 
     public IdentifierNode(String identifier, int lineNumber) {
         super("IdentifierType", lineNumber);
