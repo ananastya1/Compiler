@@ -1,21 +1,21 @@
-type arr is array[10] integer
-
-for i in 1..10 loop
-  arr[i] := input(integer)
+type Triangle is record
+    var side1: real;
+    var side2: real;
+    var side3: real;
 end
 
-var n: integer is 10;
-for i in 2..n loop
-    var key: integer is arr[i];
-    var j: integer is i - 1;
-    while j >= 1 loop
-        if arr[j] > key then
-            arr[j + 1] := arr[j];
-        end
-        j := j - 1;
-    end
-    arr[j + 1] := key;
+routine is_right_triangle(t: Triangle) is
+    var a: real is t.side1;
+    var b: real is t.side2;
+    var c: real is t.side3;
+    if a*a + b*b = c*c then
+        writeln(true);
+    else
+        writeln(false);
+    end;
 end
-for i in 1..n loop
-  writes(arr[i]);
-end
+var my_triangle: Triangle;
+my_triangle.side1 := 3.0;
+my_triangle.side2 := 4.0;
+my_triangle.side3 := 5.0;
+is_right_triangle(my_triangle);
